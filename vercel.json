@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "name": "mamacare-prj",
   "buildCommand": "npm --prefix FE install --legacy-peer-deps && npm --prefix FE run build",
   "outputDirectory": "FE/dist",
   "rewrites": [
