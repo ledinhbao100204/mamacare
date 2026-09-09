@@ -11,6 +11,10 @@ if (fs.existsSync(atlasEnv)) {
 }
 dotenv.config({ path: path.join(__dirname, '../BE/.env') });
 
+if (!process.env.MONGODB_URI) {
+  process.env.MONGODB_URI = 'mongodb+srv://ledinhbao1002_db_user:j89mcODTh2aAlQCA@cluster0.clydibp.mongodb.net/mamacare?retryWrites=true&w=majority';
+}
+
 const { connectDB } = require('../BE/config/db');
 const apiRoutes = require('../BE/routes/api');
 

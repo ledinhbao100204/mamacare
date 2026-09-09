@@ -155,46 +155,77 @@ async function seedInitialData() {
   }
 }
 
+let isDbConnected = false;
+let cachedPromise = null;
+let hasSeeded = false;
+
 async function connectDB() {
-  const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/mamacare';
+  if (mongoose.connection.readyState === 1) {
+    isDbConnected = true;
+    return true;
+  }
+
+  if (cachedPromise) {
+    return cachedPromise;
+  }
+
+  const defaultAtlasUri = 'mongodb+srv://ledinhbao1002_db_user:j89mcODTh2aAlQCA@cluster0.clydibp.mongodb.net/mamacare?retryWrites=true&w=majority';
+  const uri = process.env.MONGODB_URI || defaultAtlasUri;
   const isAtlas = uri.includes('mongodb.net') || uri.startsWith('mongodb+srv');
   
-  try {
-    const maskedUri = uri.replace(/:[^:@]+@/, ':****@');
-    console.log(`📡 Đang kết nối tới MongoDB ${isAtlas ? 'Atlas Cloud' : 'Local'}: ${maskedUri}...`);
-    
-    await mongoose.connect(uri, {
-      dbName: 'mamacare',
-      serverSelectionTimeoutMS: 10000
-    });
-    isDbConnected = true;
-    console.log(`🍃 Kết nối MongoDB Atlas Cloud thành công (database: mamacare)!`);
-    await seedInitialData();
-    return true;
-  } catch (err) {
-    console.warn(`⚠️ Không thể kết nối tới MongoDB tại ${uri}: ${err.message}`);
-    console.log('🔄 Đang khởi tạo MongoDB Server cục bộ dự phòng (MongoMemoryServer)...');
-
+  cachedPromise = (async () => {
     try {
-      const { MongoMemoryServer } = require('mongodb-memory-server');
-      const mongod = await MongoMemoryServer.create({
-        instance: {
-          dbName: 'mamacare'
-        }
-      });
-      const memoryUri = mongod.getUri();
-      console.log(`🌱 Đã kích hoạt Embedded MongoDB Instance: ${memoryUri}`);
+      const maskedUri = uri.replace(/:[^:@]+@/, ':****@');
+      console.log(`📡 Đang kết nối tới MongoDB ${isAtlas ? 'Atlas Cloud' : 'Local'}: ${maskedUri}...`);
       
-      await mongoose.connect(memoryUri, { dbName: 'mamacare' });
+      await mongoose.connect(uri, {
+        dbName: 'mamacare',
+        serverSelectionTimeoutMS: 8000,
+        connectTimeoutMS: 10000
+      });
       isDbConnected = true;
-      console.log('🍃 Kết nối MongoDB Engine thành công!');
-      await seedInitialData();
+      console.log(`🍃 Kết nối MongoDB Atlas Cloud thành công (database: mamacare)!`);
+      if (!hasSeeded) {
+        hasSeeded = true;
+        seedInitialData().catch(e => console.warn('Seed data non-critical error:', e.message));
+      }
       return true;
-    } catch (innerErr) {
-      console.error('❌ Lỗi kết nối MongoDB:', innerErr);
-      return false;
+    } catch (err) {
+      console.warn(`⚠️ Không thể kết nối tới MongoDB tại ${uri}: ${err.message}`);
+      cachedPromise = null;
+
+      // Không chạy MongoMemoryServer trên môi trường Production/Vercel
+      if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+        throw err;
+      }
+
+      console.log('🔄 Đang khởi tạo MongoDB Server cục bộ dự phòng (MongoMemoryServer)...');
+      try {
+        const { MongoMemoryServer } = require('mongodb-memory-server');
+        const mongod = await MongoMemoryServer.create({
+          instance: {
+            dbName: 'mamacare'
+          }
+        });
+        const memoryUri = mongod.getUri();
+        console.log(`🌱 Đã kích hoạt Embedded MongoDB Instance: ${memoryUri}`);
+        
+        await mongoose.connect(memoryUri, { dbName: 'mamacare' });
+        isDbConnected = true;
+        console.log('🍃 Kết nối MongoDB Engine thành công!');
+        if (!hasSeeded) {
+          hasSeeded = true;
+          await seedInitialData();
+        }
+        return true;
+      } catch (innerErr) {
+        console.error('❌ Lỗi kết nối MongoDB:', innerErr);
+        return false;
+      }
     }
-  }
+  })();
+
+  return cachedPromise;
 }
 
 module.exports = {

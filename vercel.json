@@ -13,7 +13,7 @@
     }
   ],
   "env": {
-    "MONGODB_URI": "mongodb+srv://ledinhbao1002_db_user:j89mcODTh2aAlQCA@cluster0.clydibp.mongodb.net",
+    "MONGODB_URI": "mongodb+srv://ledinhbao1002_db_user:j89mcODTh2aAlQCA@cluster0.clydibp.mongodb.net/mamacare?retryWrites=true&w=majority",
     "NODE_ENV": "production"
   }
 }
