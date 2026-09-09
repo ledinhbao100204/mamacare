@@ -7,8 +7,8 @@ Hệ thống hỗ trợ toàn diện sức khỏe tinh thần cho mẹ bầu, k�
 ## 🚀 Kiến Trúc Hệ Thống (Fullstack)
 
 - **Frontend**: React 18 + Vite + Tailwind CSS + Lucide Icons + Chart.js.
-- **Backend**: Node.js + Express.js (hỗ trợ cả chạy máy chủ truyền thống và Serverless Function trên Vercel).
-- **Cơ sở dữ liệu**: MongoDB Atlas Cloud (Mongoose ODM).
+- **Backend**: Node.js + Express.js.
+- **Cơ sở dữ liệu**: MongoDB Atlas Cloud.
 - **Hosting & CI/CD**: Vercel & GitHub.
 
 ---
@@ -59,31 +59,3 @@ npm run dev
 - Backend: `http://localhost:3000/api/health`
 
 ---
-
-## ☁️ Triển Khai Lên Vercel (Production)
-
-### Cách 1: Tự động qua GitHub (Khuyên dùng)
-1. Đẩy mã nguồn lên repository GitHub:
-   ```bash
-   git push origin master
-   ```
-2. Truy cập [Vercel Dashboard](https://vercel.com/new).
-3. Nhấp **Import** repository `mamacare`.
-4. Điền biến môi trường trong mục **Environment Variables**:
-   - `MONGODB_URI`: Chuỗi kết nối MongoDB Atlas.
-5. Nhấp **Deploy**.
-
-### Cách 2: Triển khai nhanh bằng Vercel CLI
-```bash
-npx vercel deploy --prod
-```
-
----
-
-## 🔐 Tài Khoản Kiểm Thử Mẫu (Demo Accounts)
-
-| Vai trò | Email / SĐT | Mật khẩu | Đặc quyền |
-| :--- | :--- | :--- | :--- |
-| **Mẹ Bầu** | `mebau@mamacare.vn` / `0988112233` | `password123` | Trạm cảm xúc, Trợ lý AI thấu cảm, Không gian thở, Diễn đàn góc khuất |
-| **Bố Bỉm** | `bobim@mamacare.vn` / `0977223344` | `password123` | Radar thời tiết tâm trạng vợ, Gợi ý cứu vợ, Lớp học làm ba, Hỏi bác sĩ |
-| **Quản Trị** | `admin@mamacare.vn` / `0911000999` | `adminpassword123` | Báo cáo tăng trưởng, Danh sách vi phạm, Phê duyệt/gỡ bỏ nội dung |

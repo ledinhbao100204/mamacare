@@ -166,9 +166,7 @@ async function connectDB() {
   if (cachedPromise) {
     return cachedPromise;
   }
-
-  const defaultAtlasUri = 'mongodb+srv://ledinhbao1002_db_user:j89mcODTh2aAlQCA@cluster0.clydibp.mongodb.net/mamacare?retryWrites=true&w=majority';
-  const uri = process.env.MONGODB_URI || defaultAtlasUri;
+  const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/mamacare';
   const isAtlas = uri.includes('mongodb.net') || uri.startsWith('mongodb+srv');
   
   cachedPromise = (async () => {
