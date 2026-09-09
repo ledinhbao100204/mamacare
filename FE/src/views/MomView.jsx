@@ -499,9 +499,6 @@ export default function MomView({ onTriggerSos }) {
                   <div className="bg-amber-50/70 p-4 rounded-2xl border border-amber-200 space-y-2 flex flex-col justify-between">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-black font-cute text-amber-800">Cân nặng & Thân nhiệt:</span>
-                      <span className="text-[10px] text-amber-700 font-bold bg-amber-100/90 px-2 py-0.5 rounded-full">
-                        <i className="fa-solid fa-sliders mr-1 text-[9px]"></i>Có thể chỉnh
-                      </span>
                     </div>
 
                     <div className="flex items-center justify-between pt-1">
