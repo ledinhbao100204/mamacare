@@ -15,6 +15,24 @@ export default function MomView({ onTriggerSos }) {
   const [symptoms, setSymptoms] = useState(['Khỏe khoắn']);
   const [waterCount, setWaterCount] = useState(6);
   const waterTarget = 8;
+  const [weight, setWeight] = useState(() => {
+    const saved = localStorage.getItem('mamacare_mom_weight');
+    return saved ? parseFloat(saved) : 58.5;
+  });
+  const [temperature, setTemperature] = useState(() => {
+    const saved = localStorage.getItem('mamacare_mom_temperature');
+    return saved ? parseFloat(saved) : 36.8;
+  });
+  const initialWeight = 54.3;
+
+  useEffect(() => {
+    localStorage.setItem('mamacare_mom_weight', weight.toString());
+  }, [weight]);
+
+  useEffect(() => {
+    localStorage.setItem('mamacare_mom_temperature', temperature.toString());
+  }, [temperature]);
+
   const [journalText, setJournalText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [chartPeriod, setChartPeriod] = useState('week');
@@ -128,6 +146,8 @@ export default function MomView({ onTriggerSos }) {
       mood: selectedMood.title,
       symptoms,
       waterCount,
+      weight,
+      temperature,
       journal: journalText
     };
     await MamaApi.submitMoodCheckIn(payload);
@@ -329,7 +349,7 @@ export default function MomView({ onTriggerSos }) {
               : 'bg-white text-slate-600 border-2 border-slate-100 hover:border-pink-200'
           }`}
         >
-          <i className="fa-solid fa-heart-pulse mr-2"></i>1.1 Trạm Cảm Xúc & Sức Khỏe 🌈
+          <i className="fa-solid fa-heart-pulse mr-2"></i>Trạm Cảm Xúc & Sức Khỏe 🌈
         </button>
         <button
           type="button"
@@ -340,7 +360,7 @@ export default function MomView({ onTriggerSos }) {
               : 'bg-white text-slate-600 border-2 border-slate-100 hover:border-pink-200'
           }`}
         >
-          <i className="fa-solid fa-robot mr-2 text-pink-400"></i>1.2 Trợ Lý AI Tâm Giao 🎀
+          <i className="fa-solid fa-robot mr-2 text-pink-400"></i>Trợ Lý AI Tâm Giao 🎀
         </button>
         <button
           type="button"
@@ -351,7 +371,7 @@ export default function MomView({ onTriggerSos }) {
               : 'bg-white text-slate-600 border-2 border-slate-100 hover:border-emerald-200'
           }`}
         >
-          <i className="fa-solid fa-spa mr-2 text-emerald-500"></i>1.3 Không Gian Thở Zen 🍃
+          <i className="fa-solid fa-spa mr-2 text-emerald-500"></i>Không Gian Thở Zen 🍃
         </button>
         <button
           type="button"
@@ -362,7 +382,7 @@ export default function MomView({ onTriggerSos }) {
               : 'bg-white text-slate-600 border-2 border-slate-100 hover:border-purple-200'
           }`}
         >
-          <i className="fa-solid fa-comments mr-2 text-purple-400"></i>1.4 Diễn Đàn Góc Khuất ☁️
+          <i className="fa-solid fa-comments mr-2 text-purple-400"></i>Diễn Đàn Góc Khuất ☁️
         </button>
         <button
           type="button"
@@ -373,7 +393,7 @@ export default function MomView({ onTriggerSos }) {
               : 'bg-white text-slate-600 border-2 border-slate-100 hover:border-sky-200'
           }`}
         >
-          <i className="fa-solid fa-calendar-check mr-2 text-sky-400"></i>1.5 Lịch Khám & Thuốc 💊
+          <i className="fa-solid fa-calendar-check mr-2 text-sky-400"></i>Lịch Khám & Thuốc 💊
         </button>
       </div>
 
@@ -396,10 +416,10 @@ export default function MomView({ onTriggerSos }) {
                   </span>
                 </div>
 
-                {/* 1. Emoji Picker */}
+                {/* Emoji Picker */}
                 <div className="space-y-2">
                   <label className="text-xs font-black font-cute text-slate-700 uppercase tracking-wider block flex items-center justify-between">
-                    <span>1. Chọn biểu tượng cảm xúc (Chỉ 5 giây):</span>
+                    <span>Chọn biểu tượng cảm xúc (Chỉ 5 giây):</span>
                     <span className="text-[11px] font-extrabold text-rose-500 font-cute">
                       Đang chọn: {selectedMood.emoji} {selectedMood.title}
                     </span>
@@ -428,9 +448,9 @@ export default function MomView({ onTriggerSos }) {
                   </div>
                 </div>
 
-                {/* 2. Triệu chứng cơ thể */}
+                {/* Triệu chứng cơ thể */}
                 <div className="space-y-2">
-                  <label className="text-xs font-black font-cute text-slate-700 uppercase tracking-wider block">2. Triệu chứng cơ thể hôm nay:</label>
+                  <label className="text-xs font-black font-cute text-slate-700 uppercase tracking-wider block">Triệu chứng cơ thể hôm nay:</label>
                   <div className="flex flex-wrap gap-2">
                     {['🦴 Đau thắt lưng', '🤢 Buồn nôn / Nghén', '💤 Khó ngủ / Trằn trọc', '🦵 Chuột rút bắp chân', '✨ Tràn đầy năng lượng'].map(sym => (
                       <button
@@ -451,7 +471,7 @@ export default function MomView({ onTriggerSos }) {
                   </div>
                 </div>
 
-                {/* 3. Nước uống & Nhật ký */}
+                {/* Nước uống & Cân nặng, Thân nhiệt */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
                   <div className="bg-sky-50/70 p-4 rounded-2xl border border-sky-200 space-y-2">
                     <div className="flex items-center justify-between">
@@ -470,22 +490,93 @@ export default function MomView({ onTriggerSos }) {
                       ))}
                     </div>
                     <div className="flex justify-end space-x-2 pt-1">
-                      <button type="button" onClick={() => setWaterCount(Math.max(0, waterCount - 1))} className="w-7 h-7 rounded-full bg-white text-sky-600 font-bold border border-sky-300 text-xs">-</button>
-                      <button type="button" onClick={() => setWaterCount(Math.min(waterTarget, waterCount + 1))} className="w-7 h-7 rounded-full bg-sky-500 text-white font-bold text-xs">+</button>
+                      <button type="button" onClick={() => setWaterCount(Math.max(0, waterCount - 1))} className="w-7 h-7 rounded-full bg-white text-sky-600 font-bold border border-sky-300 text-xs hover:bg-sky-100 transition shadow-xs cursor-pointer">-</button>
+                      <button type="button" onClick={() => setWaterCount(Math.min(waterTarget, waterCount + 1))} className="w-7 h-7 rounded-full bg-sky-500 text-white font-bold text-xs hover:bg-sky-600 transition shadow-xs cursor-pointer">+</button>
                     </div>
                   </div>
 
-                  <div className="bg-amber-50/70 p-4 rounded-2xl border border-amber-200 space-y-1">
-                    <span className="text-xs font-black font-cute text-amber-800">Cân nặng & Thân nhiệt:</span>
-                    <div className="flex items-center justify-between pt-2">
-                      <div className="text-center">
-                        <span className="text-lg font-black font-cute text-slate-800">58.5</span>
-                        <span className="text-[10px] text-slate-500 block font-bold">Kg (+4.2kg)</span>
+                  {/* Cân nặng & Thân nhiệt có thể điều chỉnh */}
+                  <div className="bg-amber-50/70 p-4 rounded-2xl border border-amber-200 space-y-2 flex flex-col justify-between">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black font-cute text-amber-800">Cân nặng & Thân nhiệt:</span>
+                      <span className="text-[10px] text-amber-700 font-bold bg-amber-100/90 px-2 py-0.5 rounded-full">
+                        <i className="fa-solid fa-sliders mr-1 text-[9px]"></i>Có thể chỉnh
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1">
+                      {/* Điều chỉnh Cân nặng */}
+                      <div className="text-center flex-1">
+                        <div className="flex items-center justify-center space-x-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setWeight(prev => Number((Math.max(30, prev - 0.1)).toFixed(1)))}
+                            className="w-7 h-7 rounded-full bg-white text-amber-700 font-bold border border-amber-300 text-xs hover:bg-amber-100 flex items-center justify-center transition shadow-xs cursor-pointer"
+                            title="Giảm cân nặng (-0.1 kg)"
+                          >
+                            -
+                          </button>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={weight}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value);
+                              if (!isNaN(val)) setWeight(Number(val.toFixed(1)));
+                            }}
+                            className="w-14 text-center text-lg font-black font-cute text-slate-800 bg-transparent border-b border-dashed border-amber-400 focus:outline-none focus:border-amber-600"
+                            title="Nhấp để nhập trực tiếp số cân nặng"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setWeight(prev => Number((Math.min(150, prev + 0.1)).toFixed(1)))}
+                            className="w-7 h-7 rounded-full bg-amber-500 text-white font-bold text-xs hover:bg-amber-600 flex items-center justify-center transition shadow-xs cursor-pointer"
+                            title="Tăng cân nặng (+0.1 kg)"
+                          >
+                            +
+                          </button>
+                        </div>
+                        <span className="text-[10px] text-slate-500 block font-bold mt-1">
+                          Kg ({weight >= initialWeight ? `+${(weight - initialWeight).toFixed(1)}` : (weight - initialWeight).toFixed(1)}kg)
+                        </span>
                       </div>
-                      <div className="h-8 w-px bg-amber-200"></div>
-                      <div className="text-center">
-                        <span className="text-lg font-black font-cute text-slate-800">36.8</span>
-                        <span className="text-[10px] text-slate-500 block font-bold">°C Bình thường</span>
+
+                      <div className="h-8 w-px bg-amber-200 mx-1"></div>
+
+                      {/* Điều chỉnh Thân nhiệt */}
+                      <div className="text-center flex-1">
+                        <div className="flex items-center justify-center space-x-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setTemperature(prev => Number((Math.max(34, prev - 0.1)).toFixed(1)))}
+                            className="w-7 h-7 rounded-full bg-white text-amber-700 font-bold border border-amber-300 text-xs hover:bg-amber-100 flex items-center justify-center transition shadow-xs cursor-pointer"
+                            title="Giảm thân nhiệt (-0.1 °C)"
+                          >
+                            -
+                          </button>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={temperature}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value);
+                              if (!isNaN(val)) setTemperature(Number(val.toFixed(1)));
+                            }}
+                            className="w-14 text-center text-lg font-black font-cute text-slate-800 bg-transparent border-b border-dashed border-amber-400 focus:outline-none focus:border-amber-600"
+                            title="Nhấp để nhập trực tiếp thân nhiệt"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setTemperature(prev => Number((Math.min(42, prev + 0.1)).toFixed(1)))}
+                            className="w-7 h-7 rounded-full bg-amber-500 text-white font-bold text-xs hover:bg-amber-600 flex items-center justify-center transition shadow-xs cursor-pointer"
+                            title="Tăng thân nhiệt (+0.1 °C)"
+                          >
+                            +
+                          </button>
+                        </div>
+                        <span className={`text-[10px] block font-bold mt-1 ${temperature > 37.5 ? 'text-rose-600' : 'text-slate-500'}`}>
+                          °C {temperature < 36.0 ? 'Hạ nhiệt' : temperature <= 37.3 ? 'Bình thường' : temperature <= 38.0 ? 'Sốt nhẹ' : 'Sốt cao ⚠️'}
+                        </span>
                       </div>
                     </div>
                   </div>
