@@ -21,12 +21,6 @@ export default function Header({
               <span className="text-2xl font-black font-cute tracking-wide bg-gradient-to-r from-rose-500 via-pink-400 to-purple-500 bg-clip-text text-transparent">
                 MamaCare
               </span>
-              {nodeOnline && (
-                <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-300 shadow-sm">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span>🍃 MongoDB Database</span>
-                </span>
-              )}
             </div>
             <span className="hidden sm:block text-xs text-slate-400 font-bold">
               Nền Tảng Đồng Hành Thai Kỳ & Sức Khỏe Tinh Thần

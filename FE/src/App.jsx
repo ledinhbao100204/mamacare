@@ -113,17 +113,12 @@ export default function App() {
           </div>
 
           {/* Chỉ hiển thị liên kết nhanh nếu là Admin đã đăng nhập */}
-          {currentUser && currentUser.role === 'admin' ? (
+          {currentUser && currentUser.role === 'admin' && (
             <div className="flex items-center space-x-4 text-xs font-bold text-slate-400">
               <button onClick={() => setCurrentRole('mom')} className="hover:text-rose-500">Phân hệ Mẹ</button>
               <button onClick={() => setCurrentRole('husband')} className="hover:text-blue-500">Phân hệ Chồng</button>
               <button onClick={() => setCurrentRole('admin')} className="hover:text-purple-500">Ban Quản Lý</button>
-              <span className="text-emerald-600 font-black">• MongoDB Atlas Live</span>
             </div>
-          ) : (
-            <span className="text-xs text-emerald-600 font-black">
-              • MongoDB Atlas Cloud Connected
-            </span>
           )}
         </div>
       </footer>
