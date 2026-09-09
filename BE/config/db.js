@@ -11,8 +11,6 @@ if (fs.existsSync(atlasEnvPath)) {
 // Nạp thêm từ .env thông thường
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
-let isDbConnected = false;
-
 async function seedInitialData() {
   try {
     const User = require('../models/User');

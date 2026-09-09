@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
 // Nạp thông tin kết nối MongoDB từ atlas-credentials.env hoặc qua biến môi trường Vercel MONGODB_URI
@@ -33,8 +34,30 @@ app.use(async (req, res, next) => {
   }
   next();
 });
-
 // Mount các endpoints backend API
+app.get('/api/debug-db', async (req, res) => {
+  try {
+    const status = {
+      readyState: mongoose.connection.readyState,
+      isDbConnected: require('../BE/config/db').isConnected(),
+      hasEnvUri: Boolean(process.env.MONGODB_URI),
+      env: process.env.NODE_ENV
+    };
+    await connectDB();
+    status.readyStateAfter = mongoose.connection.readyState;
+    status.connected = true;
+    res.json({ success: true, status });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      errorName: err.name,
+      errorMessage: err.message,
+      errorCode: err.code,
+      readyState: mongoose.connection.readyState
+    });
+  }
+});
+
 app.use('/api', apiRoutes);
 app.use('/', apiRoutes);
 
