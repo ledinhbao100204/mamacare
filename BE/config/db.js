@@ -197,7 +197,8 @@ async function connectDB() {
 
       console.log('🔄 Đang khởi tạo MongoDB Server cục bộ dự phòng (MongoMemoryServer)...');
       try {
-        const { MongoMemoryServer } = require('mongodb-memory-server');
+        const msPkg = 'mongodb-memory-server';
+        const { MongoMemoryServer } = require(msPkg);
         const mongod = await MongoMemoryServer.create({
           instance: {
             dbName: 'mamacare'

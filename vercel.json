@@ -1,7 +1,6 @@
 {
   "version": 2,
-  "name": "mamacare-prj",
-  "buildCommand": "npm --prefix FE install --legacy-peer-deps && npm --prefix FE run build",
+  "buildCommand": "cd FE && npm install --legacy-peer-deps && npm run build",
   "outputDirectory": "FE/dist",
   "rewrites": [
     {
@@ -9,11 +8,12 @@
       "destination": "/api/index.js"
     },
     {
+      "source": "/api",
+      "destination": "/api/index.js"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
