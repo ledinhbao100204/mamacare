@@ -1,0 +1,39 @@
+<!-- NOTIFICATION PUSH ALERT TOAST CHO CHỒNG -->
+<div id="pushNotificationBanner" class="fixed top-5 right-5 z-50 max-w-md w-[92%] sm:w-[420px] hidden toast-animate">
+    <div class="bg-gradient-to-r from-slate-900 via-rose-950 to-slate-900 text-white rounded-[28px] p-5 shadow-2xl border-2 border-rose-400/80 backdrop-blur-xl space-y-3 relative overflow-hidden">
+        <div class="flex items-start justify-between relative z-10">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 to-amber-400 text-white flex items-center justify-center text-xl shadow-md bell-ring">
+                    🔔
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-black uppercase tracking-wider text-rose-300 font-cute">MamaCare Push Alert</span>
+                        <span class="text-[10px] bg-rose-500/40 text-rose-200 px-2 py-0.5 rounded-full font-bold">Thời gian thực</span>
+                    </div>
+                    <h4 class="text-sm font-black font-cute text-white" id="pushNotifTitle">Vợ bạn đang bị quá tải cảm xúc!</h4>
+                </div>
+            </div>
+            <button type="button" onclick="dismissPushNotif()" class="text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <p id="pushNotifBody" class="text-xs text-rose-100/90 font-medium leading-relaxed bg-white/10 p-3 rounded-2xl border border-white/15">
+            "Vợ bạn hôm nay đang bị quá tải. Lời khuyên: Hãy rủ cô ấy đi dạo, mua món cô ấy thích hoặc chủ động rửa bát tối nay nhé!"
+        </p>
+
+        <!-- Quick Action Buttons for Husband -->
+        <div class="pt-1 flex flex-wrap gap-2 text-xs font-bold" id="pushActionButtons">
+            <button type="button" onclick="takePartnerAction('dish', 'Tối nay anh chủ động rửa bát')" class="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-full font-cute shadow-sm bounce-click">
+                🧼 Tối nay anh rửa bát
+            </button>
+            <button type="button" onclick="takePartnerAction('milk_tea', 'Mua đồ ăn vặt & trà sữa vợ thích')" class="px-3 py-1.5 bg-amber-400 hover:bg-amber-500 text-slate-900 rounded-full font-cute shadow-sm bounce-click">
+                🧋 Mua món vợ thích
+            </button>
+            <button type="button" onclick="takePartnerAction('hug', 'Ôm vợ thật chặt và động viên')" class="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-full font-cute bounce-click">
+                ❤️ Ôm vợ thật chặt
+            </button>
+        </div>
+    </div>
+</div>

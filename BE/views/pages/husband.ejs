@@ -1,0 +1,239 @@
+<!-- ========================================================================= -->
+<!-- PHÂN HỆ 2: DÀNH CHO NGƯỜI CHỒNG / BỐ BỈM (VIEW ĐỘC LẬP) -->
+<!-- ========================================================================= -->
+<section id="roleSection-husband" class="space-y-8">
+
+    <!-- Header Banner Giới Thiệu Module Vũ Khí Bí Mật -->
+    <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white rounded-[32px] p-6 sm:p-8 shadow-xl relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 w-44 h-44 bg-white/10 rounded-full blur-2xl"></div>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+            <div class="space-y-2">
+                <div class="flex items-center space-x-2">
+                    <span class="px-3 py-1 bg-white/20 text-blue-100 rounded-full text-xs font-black uppercase font-cute">
+                        Vũ Khí Bí Mật Của Bố
+                    </span>
+                    <span class="text-xs text-blue-200 font-bold">• Đang kết nối với vợ: <%= syncData.momName || 'Thùy Trang' %> (Tuần 24)</span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-black font-cute">Trung Tâm Trợ Thủ & Đồng Bộ Cảm Xúc Của Vợ</h2>
+                <p class="text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
+                    Giúp các ông bố thấu hiểu sự thay đổi tâm sinh lý của vợ bầu, giải mã cơn giận và nhận hướng dẫn hành động cụ thể để trở thành chỗ dựa vững chắc.
+                </p>
+            </div>
+            <button type="button" onclick="openQrModal()" class="px-5 py-3 bg-white text-blue-600 rounded-2xl font-black font-cute text-xs shadow-md bounce-hover shrink-0 flex items-center space-x-2">
+                <i class="fa-solid fa-qrcode text-base"></i>
+                <span>Mã QR Ghép Đôi</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODULE 2.1: ĐỒNG BỘ THỜI TIẾT CẢM XÚC & GỢI Ý HÀNH ĐỘNG "CỨU VỢ" -->
+    <!-- ========================================================================= -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Hero Weather Card: Thời tiết tâm trạng vợ hôm nay -->
+        <div class="lg:col-span-1">
+            <div class="weather-hero-card <%= syncData.weather === 'sunny' ? 'weather-hero-sunny' : (syncData.weather === 'rainy' ? 'weather-hero-rainy' : 'weather-hero-stormy') %> p-6 sm:p-8 shadow-cloud space-y-5">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-black uppercase font-cute px-3 py-1 bg-white/80 rounded-full text-slate-800 shadow-sm">
+                        Thời Tiết Cảm Xúc Của Vợ
+                    </span>
+                    <span class="text-[11px] font-bold text-slate-600"><%= syncData.lastCheckIn || 'Hôm nay' %></span>
+                </div>
+
+                <div class="text-center py-4 space-y-2">
+                    <div class="text-6xl cloud-drift inline-block">
+                        <% if (syncData.weather === 'sunny') { %> ☀️ <% } else if (syncData.weather === 'rainy') { %> 🌧️ <% } else { %> ⛈️ <% } %>
+                    </div>
+                    <h3 class="text-xl font-black font-cute text-slate-800"><%= syncData.weatherTitle || 'Sấm chớp giông bão - Dễ bức bối' %></h3>
+                    <p class="text-xs text-slate-600 font-semibold px-4">
+                        Tâm trạng: <strong class="text-rose-600"><%= syncData.currentMood || 'Cực kỳ nhạy cảm' %></strong>
+                    </p>
+                </div>
+
+                <!-- Thước đo chỉ số áp lực của vợ -->
+                <div class="p-4 bg-white/80 rounded-2xl border border-white/60 space-y-3">
+                    <div>
+                        <div class="flex justify-between text-xs font-bold text-slate-700">
+                            <span>Mức độ căng thẳng:</span>
+                            <span class="text-rose-600"><%= syncData.stressScore || 76 %>%</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden mt-1">
+                            <div class="h-full bg-rose-500 rounded-full" style="width: <%= syncData.stressScore || 76 %>%;"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs font-bold text-slate-700">
+                            <span>Mức độ mỏi thắt lưng:</span>
+                            <span class="text-amber-600"><%= syncData.fatigueScore || 82 %>%</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden mt-1">
+                            <div class="h-full bg-amber-500 rounded-full" style="width: <%= syncData.fatigueScore || 82 %>%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" onclick="takePartnerAction('hug', 'Ôm vợ thật chặt')" class="w-full py-3 bg-white text-slate-800 rounded-2xl font-black font-cute text-xs shadow-sm hover:bg-slate-50 bounce-hover flex items-center justify-center space-x-2">
+                    <span>💌 Gửi Yêu Thương Đến Màn Hình Vợ</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Cột Phải: Gợi Ý Hành Động "Cứu Vợ" (Actionable Tips) -->
+        <div class="lg:col-span-2 space-y-4">
+            <div class="bg-white rounded-[32px] p-6 sm:p-8 shadow-cloud border-4 border-blue-100 space-y-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-black font-cute text-slate-800 flex items-center gap-2">
+                            <span>Gợi Ý Hành Động "Cứu Vợ" Tức Thời</span>
+                            <span>🎯</span>
+                        </h3>
+                        <p class="text-xs text-slate-400 font-semibold">Tự động đề xuất dựa trên cảm xúc & triệu chứng thực tế của vợ hôm nay</p>
+                    </div>
+                    <span class="text-xs font-black font-cute px-3 py-1 bg-rose-100 text-rose-700 rounded-full">
+                        Đang Cần Bố Giúp
+                    </span>
+                </div>
+
+                <!-- Banner Lời Khuyên Cốt Lõi -->
+                <div class="p-4 bg-gradient-to-r from-rose-50 to-pink-50 rounded-2xl border-2 border-rose-200 flex items-start space-x-3">
+                    <span class="text-2xl">💡</span>
+                    <div class="space-y-1">
+                        <h4 class="text-xs font-black font-cute uppercase text-rose-700">Lời Khuyên Y Khoa Cho Bố:</h4>
+                        <p class="text-xs text-slate-700 font-bold leading-relaxed">
+                            "<%= syncData.actionTip || 'Vợ bạn hôm nay đang bị quá tải. Lời khuyên: Hãy rủ cô ấy đi dạo, mua món cô ấy thích hoặc chủ động rửa bát tối nay nhé!' %>"
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Danh sách 4 Hành động Cụ Thể Có Nút Bấm Thực Hiện -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div class="rescue-tip-card p-4 bg-rose-50/70 border-rose-200 flex items-start justify-between space-x-3">
+                        <div class="space-y-1">
+                            <span class="text-[10px] font-black uppercase text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full font-cute">Việc nhà</span>
+                            <h5 class="text-xs font-black font-cute text-slate-800">Chủ động rửa bát & dọn bếp 🧼</h5>
+                            <p class="text-[11px] text-slate-500 font-semibold leading-relaxed">Giúp vợ không phải đứng lâu gây dồn trọng lượng lên lưng và chân.</p>
+                        </div>
+                        <button type="button" onclick="takePartnerAction('dish', 'Chủ động rửa bát tối nay', this)" class="px-3.5 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-black font-cute shrink-0 bounce-click shadow-sm">
+                            Đã Làm
+                        </button>
+                    </div>
+
+                    <div class="rescue-tip-card p-4 bg-amber-50/70 border-amber-200 flex items-start justify-between space-x-3">
+                        <div class="space-y-1">
+                            <span class="text-[10px] font-black uppercase text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full font-cute">Thư giãn</span>
+                            <h5 class="text-xs font-black font-cute text-slate-800">Massage thắt lưng 15 phút 💆‍♂️</h5>
+                            <p class="text-[11px] text-slate-500 font-semibold leading-relaxed">Xoa tròn nhẹ nhàng vùng L4-L5 cùng dầu tràm hoặc tinh dầu dừa ấm.</p>
+                        </div>
+                        <button type="button" onclick="takePartnerAction('massage', 'Massage thắt lưng 15 phút cho vợ', this)" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black font-cute shrink-0 bounce-click shadow-sm">
+                            Đã Làm
+                        </button>
+                    </div>
+
+                    <div class="rescue-tip-card p-4 bg-sky-50/70 border-sky-200 flex items-start justify-between space-x-3">
+                        <div class="space-y-1">
+                            <span class="text-[10px] font-black uppercase text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full font-cute">Dinh dưỡng</span>
+                            <h5 class="text-xs font-black font-cute text-slate-800">Mua món bánh/trà sữa vợ thích 🧋</h5>
+                            <p class="text-[11px] text-slate-500 font-semibold leading-relaxed">Một chút đồ ăn ngon kèm lời nhắn ngọt ngào sẽ làm dịu tâm trạng ngay.</p>
+                        </div>
+                        <button type="button" onclick="takePartnerAction('treat', 'Mua món ăn vặt vợ thích', this)" class="px-3.5 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-black font-cute shrink-0 bounce-click shadow-sm">
+                            Đã Làm
+                        </button>
+                    </div>
+
+                    <div class="rescue-tip-card p-4 bg-emerald-50/70 border-emerald-200 flex items-start justify-between space-x-3">
+                        <div class="space-y-1">
+                            <span class="text-[10px] font-black uppercase text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full font-cute">Gắn kết</span>
+                            <h5 class="text-xs font-black font-cute text-slate-800">Rủ vợ đi dạo hóng gió mát 🍃</h5>
+                            <p class="text-[11px] text-slate-500 font-semibold leading-relaxed">15 phút đi bộ cùng chồng hít thở không khí trong lành giúp giải tỏa bức bối.</p>
+                        </div>
+                        <button type="button" onclick="takePartnerAction('walk', 'Rủ vợ đi dạo công viên', this)" class="px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-black font-cute shrink-0 bounce-click shadow-sm">
+                            Đã Làm
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODULE 2.2: LỚP HỌC LÀM BA (DADDY BOOTCAMP) -->
+    <!-- ========================================================================= -->
+    <div class="bg-white rounded-[32px] p-6 sm:p-8 shadow-cloud border-4 border-amber-100 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+                <h3 class="text-lg sm:text-xl font-black font-cute text-slate-800 flex items-center gap-2">
+                    <span>Lớp Học Làm Ba (Daddy Bootcamp)</span>
+                    <span>🎓</span>
+                </h3>
+                <p class="text-xs text-amber-700 font-semibold">Các bài học Micro-learning dưới 1 phút giải thích khoa học biến động hormone và kỹ năng chăm sóc</p>
+            </div>
+            <span class="text-xs font-black font-cute px-3 py-1 bg-amber-100 text-amber-800 rounded-full border border-amber-300 w-fit">
+                ⭐ Huy hiệu Bố Bỉm 10 Điểm
+            </span>
+        </div>
+
+        <!-- 4 Thẻ Bài Học Micro-learning -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <div onclick="openBootcampVideo('hormone')" class="bootcamp-card p-5 bg-gradient-to-tr from-rose-50 to-pink-50 border-2 border-rose-200 space-y-3">
+                <div class="w-10 h-10 rounded-2xl bg-rose-500 text-white flex items-center justify-center text-lg shadow-sm">
+                    🧬
+                </div>
+                <div>
+                    <span class="text-[10px] font-black uppercase text-rose-600 font-cute">45 giây đọc</span>
+                    <h4 class="text-xs sm:text-sm font-black font-cute text-slate-800 mt-0.5">Giải Mã Hormone Estrogen & Progesterone</h4>
+                </div>
+                <p class="text-[11px] text-slate-500 font-semibold leading-relaxed">Hiểu vì sao lượng hormone tăng gấp 30 lần khiến vợ siêu nhạy cảm và dễ khóc.</p>
+                <span class="text-xs font-black font-cute text-rose-600 flex items-center gap-1">
+                    Xem bài giảng <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </span>
+            </div>
+
+            <div onclick="openBootcampVideo('massage')" class="bootcamp-card p-5 bg-gradient-to-tr from-amber-50 to-orange-50 border-2 border-amber-200 space-y-3">
+                <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-lg shadow-sm">
+                    💆‍♂️
+                </div>
+                <div>
+                    <span class="text-[10px] font-black uppercase text-amber-600 font-cute">55 giây video</span>
+                    <h4 class="text-xs sm:text-sm font-black font-cute text-slate-800 mt-0.5">Kỹ Thuật Massage Thắt Lưng Cho Vợ</h4>
+                </div>
+                <p class="text-[11px] text-slate-500 font-semibold leading-relaxed">3 động tác xoa bóp chuẩn y khoa giúp giảm đau nhức mỏi lưng đến 80%.</p>
+                <span class="text-xs font-black font-cute text-amber-600 flex items-center gap-1">
+                    Xem bài giảng <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </span>
+            </div>
+
+            <div onclick="openBootcampVideo('speech')" class="bootcamp-card p-5 bg-gradient-to-tr from-blue-50 to-indigo-50 border-2 border-blue-200 space-y-3">
+                <div class="w-10 h-10 rounded-2xl bg-blue-500 text-white flex items-center justify-center text-lg shadow-sm">
+                    💬
+                </div>
+                <div>
+                    <span class="text-[10px] font-black uppercase text-blue-600 font-cute">40 giây đọc</span>
+                    <h4 class="text-xs sm:text-sm font-black font-cute text-slate-800 mt-0.5">Từ Điển Giao Tiếp: Tránh Câu Nói Cấm Kỵ</h4>
+                </div>
+                <p class="text-[11px] text-slate-500 font-semibold leading-relaxed">Những câu nói tuyệt đối không được nói và cách an ủi để vợ luôn an tâm.</p>
+                <span class="text-xs font-black font-cute text-blue-600 flex items-center gap-1">
+                    Xem bài giảng <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </span>
+            </div>
+
+            <div onclick="openBootcampVideo('hospital_bag')" class="bootcamp-card p-5 bg-gradient-to-tr from-emerald-50 to-teal-50 border-2 border-emerald-200 space-y-3">
+                <div class="w-10 h-10 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-lg shadow-sm">
+                    🎒
+                </div>
+                <div>
+                    <span class="text-[10px] font-black uppercase text-emerald-600 font-cute">50 giây đọc</span>
+                    <h4 class="text-xs sm:text-sm font-black font-cute text-slate-800 mt-0.5">Checklist Giỏ Đồ Đi Sinh Cho Bố</h4>
+                </div>
+                <p class="text-[11px] text-slate-500 font-semibold leading-relaxed">Hồ sơ khám, đồ sơ sinh, bỉm mẹ và những vật dụng thiết yếu lúc chuyển dạ.</p>
+                <span class="text-xs font-black font-cute text-emerald-600 flex items-center gap-1">
+                    Xem bài giảng <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </span>
+            </div>
+
+        </div>
+    </div>
+
+</section>

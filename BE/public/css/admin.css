@@ -1,0 +1,64 @@
+/* =========================================================================
+   MAMACARE - ADMIN PAGE CSS (PHÂN HỆ 3: BAN QUẢN LÝ DỰ ÁN)
+   Tệp CSS chuyên biệt cho giao diện Admin Dashboard
+   ========================================================================= */
+
+/* KPI Statistic Cards */
+.kpi-card {
+    border-radius: 28px;
+    border-width: 3px;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 30px -6px rgba(15, 23, 42, 0.1);
+}
+
+/* Bảng hàng đợi kiểm duyệt (Moderation Queue Table) */
+.moderation-table {
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+
+.moderation-row {
+    background-color: #FFFFFF;
+    transition: all 0.2s ease;
+}
+
+.moderation-row:hover {
+    background-color: #F8FAFC;
+    transform: scale(1.005);
+}
+
+.badge-sos-urgent {
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    color: #FFFFFF;
+    animation: pulseRed 2s infinite;
+}
+
+@keyframes pulseRed {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+    50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
+.badge-pending {
+    background-color: #FEF3C7;
+    color: #B45309;
+    border: 1px solid #FCD34D;
+}
+
+/* Revenue Breakdown Cards */
+.revenue-highlight {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: #FFFFFF;
+}
+
+.transaction-item {
+    border-bottom: 1px dashed #E2E8F0;
+    transition: background-color 0.2s ease;
+}
+
+.transaction-item:hover {
+    background-color: #F8FAFC;
+}

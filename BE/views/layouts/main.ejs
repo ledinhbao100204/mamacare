@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - MamaCare Nền Tảng Thai Kỳ & Sức Khỏe Tinh Thần</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- CSS DÙNG CHUNG CỦA TOÀN HỆ THỐNG -->
+    <link rel="stylesheet" href="/css/base.css">
+    
+    <!-- CSS CHUYÊN BIỆT RIÊNG CỦA TỪNG TRANG -->
+    <% if (pageCss) { %>
+        <link rel="stylesheet" href="<%= pageCss %>">
+    <% } %>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        mama: {
+                            50: '#FFF0F5', 100: '#FFE4EC', 200: '#FFCCD8', 300: '#FFA3B8',
+                            400: '#FF7597', 500: '#FF4D79', 600: '#E62E5C', 700: '#C21843'
+                        },
+                        baby: {
+                            50: '#F0F9FF', 100: '#E0F2FE', 200: '#BAE6FD', 300: '#7DD3FC',
+                            400: '#38BDF8', 500: '#0EA5E9', 600: '#0284C7', 700: '#0369A1'
+                        },
+                        mint: {
+                            50: '#ECFDF5', 100: '#D1FAE5', 200: '#A7F3D0', 300: '#6EE7B7',
+                            400: '#34D399', 500: '#10B981', 600: '#059669'
+                        },
+                        butter: {
+                            50: '#FFFBEB', 100: '#FEF3C7', 200: '#FDE68A', 300: '#FCD34D',
+                            400: '#FBBF24', 500: '#F59E0B'
+                        },
+                        lavender: {
+                            50: '#F5F3FF', 100: '#EDE9FE', 200: '#DDD6FE', 300: '#C4B5FD',
+                            400: '#A78BFA', 500: '#8B5CF6'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-rose-200 selection:text-rose-700">
+
+    <!-- Header dùng chung với chuyển vai trò -->
+    <%- include('./header') %>
+
+    <!-- Nội dung chính của từng View -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full">
+        <%- body %>
+    </main>
+
+    <!-- Footer dùng chung -->
+    <%- include('./footer') %>
+
+    <!-- Modals & Toasts dùng chung -->
+    <%- include('../partials/sos-modal') %>
+    <%- include('../partials/qr-modal') %>
+    <%- include('../partials/bootcamp-modal') %>
+    <%- include('../partials/push-toast') %>
+
+    <!-- Client SDK API -->
+    <script src="/js/api.js"></script>
+    
+    <!-- JAVASCRIPT RIÊNG BIỆT CHO TỪNG PAGE -->
+    <% if (pageJs) { %>
+        <script src="<%= pageJs %>"></script>
+    <% } %>
+</body>
+</html>

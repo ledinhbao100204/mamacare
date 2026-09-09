@@ -1,0 +1,427 @@
+<!-- ========================================================================= -->
+<!-- PHÂN HỆ 1: DÀNH CHO MẸ BẦU (VIEW ĐỘC LẬP) -->
+<!-- ========================================================================= -->
+<section id="roleSection-mom" class="space-y-6">
+
+    <!-- Sub-Navigation 5 Modules của Mẹ -->
+    <div class="flex overflow-x-auto space-x-2 pb-2 no-scrollbar">
+        <button type="button" onclick="switchMomTab('mood')" id="momTab-mood" class="mom-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold font-cute whitespace-nowrap bg-gradient-to-r from-rose-400 to-pink-500 text-white shadow-cute border-2 border-white bounce-hover">
+            <i class="fa-solid fa-heart-pulse mr-2"></i>1.1 Trạm Cảm Xúc & Sức Khỏe 🌈
+        </button>
+        <button type="button" onclick="switchMomTab('ai')" id="momTab-ai" class="mom-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold font-cute whitespace-nowrap bg-white text-slate-600 border-2 border-slate-100 hover:border-pink-200 bounce-hover">
+            <i class="fa-solid fa-robot mr-2 text-pink-400"></i>1.2 Trợ Lý AI Tâm Giao 🎀
+        </button>
+        <button type="button" onclick="switchMomTab('zen')" id="momTab-zen" class="mom-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold font-cute whitespace-nowrap bg-white text-slate-600 border-2 border-slate-100 hover:border-emerald-200 bounce-hover">
+            <i class="fa-solid fa-spa mr-2 text-emerald-500"></i>1.3 Không Gian Thở Zen 🍃
+        </button>
+        <button type="button" onclick="switchMomTab('forum')" id="momTab-forum" class="mom-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold font-cute whitespace-nowrap bg-white text-slate-600 border-2 border-slate-100 hover:border-purple-200 bounce-hover">
+            <i class="fa-solid fa-comments mr-2 text-purple-400"></i>1.4 Diễn Đàn Góc Khuất ☁️
+        </button>
+        <button type="button" onclick="switchMomTab('reminders')" id="momTab-reminders" class="mom-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold font-cute whitespace-nowrap bg-white text-slate-600 border-2 border-slate-100 hover:border-sky-200 bounce-hover">
+            <i class="fa-solid fa-calendar-check mr-2 text-sky-400"></i>1.5 Lịch Khám & Thuốc 💊
+        </button>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODULE 1.1: TRẠM CẢM XÚC & SỨC KHỎE (MOOD TRACKING & ANALYTICS) -->
+    <!-- ========================================================================= -->
+    <div id="momSubSection-mood" class="space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Cột Trái: Check-in 5 Giây, Triệu Chứng, Nước, Nhật Ký -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="bg-white rounded-[32px] p-6 sm:p-8 shadow-cloud border-4 border-rose-100 space-y-6 relative overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-black font-cute text-slate-800 flex items-center gap-2">
+                                <span>Check-in Cảm Xúc Hôm Nay</span>
+                                <span class="text-2xl float-cute">✨</span>
+                            </h2>
+                            <p class="text-xs font-semibold text-slate-400 mt-1">Chỉ mất 5 giây để ghi nhận cảm xúc & tự động đồng bộ sang Bố Bỉm</p>
+                        </div>
+                        <span class="text-xs font-black px-4 py-1.5 bg-gradient-to-r from-rose-100 to-pink-100 text-rose-700 rounded-full border-2 border-rose-200 shadow-sm flex items-center gap-1">
+                            <span>👶</span> Tuần thai 24
+                        </span>
+                    </div>
+
+                    <!-- 1. Emoji Picker (5 Cảm Xúc Cốt Lõi) -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-black font-cute text-slate-700 uppercase tracking-wider block flex items-center justify-between">
+                            <span>1. Chọn biểu tượng cảm xúc (Chỉ 5 giây):</span>
+                            <span id="selectedMoodNotice" class="text-[11px] font-extrabold text-rose-500 font-cute">Đang chọn: 🥰 Nắng Rực Rỡ</span>
+                        </label>
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3" id="moodButtonsGroup">
+                            <button type="button" onclick="selectMood('Nắng Rực Rỡ', '🥰', 'Đang rất vui vẻ & Hạnh phúc', this)" class="mood-opt active-mood group p-3 rounded-[22px] bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 flex flex-col items-center space-y-1 bounce-hover transition">
+                                <span class="text-3xl group-hover:scale-125 transition-transform">🥰</span>
+                                <span class="text-xs font-black font-cute text-amber-800">Vui Vẻ</span>
+                                <span class="text-[9px] text-amber-600 font-bold">Nắng Rực Rỡ</span>
+                            </button>
+                            <button type="button" onclick="selectMood('Mây Dịu Êm', '😌', 'Bình yên & Thư thái', this)" class="mood-opt group p-3 rounded-[22px] bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-300 flex flex-col items-center space-y-1 bounce-hover transition">
+                                <span class="text-3xl group-hover:scale-125 transition-transform">😌</span>
+                                <span class="text-xs font-black font-cute text-emerald-800">Bình Yên</span>
+                                <span class="text-[9px] text-emerald-600 font-bold">Mây Dịu Êm</span>
+                            </button>
+                            <button type="button" onclick="selectMood('Mưa Dông', '😤', 'Dễ cáu gắt & Quá tải', this)" class="mood-opt group p-3 rounded-[22px] bg-rose-50 hover:bg-rose-100 border-2 border-rose-300 flex flex-col items-center space-y-1 bounce-hover transition">
+                                <span class="text-3xl group-hover:scale-125 transition-transform">😤</span>
+                                <span class="text-xs font-black font-cute text-rose-800">Cáu Gắt</span>
+                                <span class="text-[9px] text-rose-600 font-bold">Sấm Chớp</span>
+                            </button>
+                            <button type="button" onclick="selectMood('Mưa Rào', '😭', 'Cực kỳ nhạy cảm & Tủi thân', this)" class="mood-opt group p-3 rounded-[22px] bg-indigo-50 hover:bg-indigo-100 border-2 border-indigo-300 flex flex-col items-center space-y-1 bounce-hover transition">
+                                <span class="text-3xl group-hover:scale-125 transition-transform">😭</span>
+                                <span class="text-xs font-black font-cute text-indigo-800">Tủi Thân</span>
+                                <span class="text-[9px] text-indigo-600 font-bold">Mưa Phùn</span>
+                            </button>
+                            <button type="button" onclick="selectMood('Gió Lốc', '🥺', 'Lo lắng & Bồn chồn', this)" class="mood-opt group p-3 rounded-[22px] bg-sky-50 hover:bg-sky-100 border-2 border-sky-300 flex flex-col items-center space-y-1 bounce-hover transition">
+                                <span class="text-3xl group-hover:scale-125 transition-transform">🥺</span>
+                                <span class="text-xs font-black font-cute text-sky-800">Lo Âu</span>
+                                <span class="text-[9px] text-sky-600 font-bold">Gió Cuốn</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 2. Triệu chứng thể chất -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-black font-cute text-slate-700 uppercase tracking-wider block">2. Triệu chứng cơ thể hôm nay:</label>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" onclick="toggleSymptom('Đau lưng', this)" class="px-3.5 py-1.5 rounded-full border-2 border-slate-200 text-xs font-bold text-slate-600 hover:border-rose-400 transition bounce-hover">
+                                🦴 Đau thắt lưng
+                            </button>
+                            <button type="button" onclick="toggleSymptom('Ốm nghén', this)" class="px-3.5 py-1.5 rounded-full border-2 border-slate-200 text-xs font-bold text-slate-600 hover:border-rose-400 transition bounce-hover">
+                                🤢 Buồn nôn / Nghén
+                            </button>
+                            <button type="button" onclick="toggleSymptom('Khó ngủ', this)" class="px-3.5 py-1.5 rounded-full border-2 border-slate-200 text-xs font-bold text-slate-600 hover:border-rose-400 transition bounce-hover">
+                                💤 Khó ngủ / Trằn trọc
+                            </button>
+                            <button type="button" onclick="toggleSymptom('Chuột rút', this)" class="px-3.5 py-1.5 rounded-full border-2 border-slate-200 text-xs font-bold text-slate-600 hover:border-rose-400 transition bounce-hover">
+                                🦵 Chuột rút bắp chân
+                            </button>
+                            <button type="button" onclick="toggleSymptom('Khỏe khoắn', this)" class="px-3.5 py-1.5 rounded-full border-2 border-rose-500 bg-rose-500 text-white text-xs font-bold hover:border-rose-400 transition bounce-hover">
+                                ✨ Tràn đầy năng lượng
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 3. Bộ Đếm Nước & Nhật Ký -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                        <div class="bg-sky-50/70 p-4 rounded-2xl border border-sky-200 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-black font-cute text-sky-800">Uống nước trong ngày:</span>
+                                <span id="waterProgressText" class="text-xs font-black text-sky-600">6 / 8 Ly (1500ml)</span>
+                            </div>
+                            <div id="waterCupsContainer" class="flex items-center justify-between text-xl pt-1">
+                                <!-- Render dynamically -->
+                            </div>
+                            <div class="flex justify-end space-x-2 pt-1">
+                                <button type="button" onclick="changeWater(-1)" class="w-7 h-7 rounded-full bg-white text-sky-600 font-bold border border-sky-300 text-xs">-</button>
+                                <button type="button" onclick="changeWater(1)" class="w-7 h-7 rounded-full bg-sky-500 text-white font-bold text-xs">+</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-amber-50/70 p-4 rounded-2xl border border-amber-200 space-y-1">
+                            <span class="text-xs font-black font-cute text-amber-800">Cân nặng & Thân nhiệt:</span>
+                            <div class="flex items-center justify-between pt-2">
+                                <div class="text-center">
+                                    <span class="text-lg font-black font-cute text-slate-800">58.5</span>
+                                    <span class="text-[10px] text-slate-500 block font-bold">Kg (+4.2kg)</span>
+                                </div>
+                                <div class="h-8 w-px bg-amber-200"></div>
+                                <div class="text-center">
+                                    <span class="text-lg font-black font-cute text-slate-800">36.8</span>
+                                    <span class="text-[10px] text-slate-500 block font-bold">°C Bình thường</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Nhật Ký Biết Ơn / Xả Stress (Text & Voice) -->
+                    <div class="space-y-2 pt-2 border-t border-slate-100">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-black font-cute text-slate-700 uppercase tracking-wider">
+                                <span>Nhật ký xả stress / biết ơn:</span>
+                            </label>
+                            <button type="button" onclick="toggleVoiceInput()" id="micBtn" class="text-xs font-black font-cute px-3 py-1 bg-rose-100 text-rose-600 rounded-full border border-rose-300 hover:bg-rose-200 transition flex items-center space-x-1.5">
+                                <i class="fa-solid fa-microphone"></i>
+                                <span>Thu âm giọng nói</span>
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <textarea id="journalInput" rows="3" placeholder="Gõ những suy nghĩ ẩn sâu hoặc bấm thu âm giọng nói để xả bớt gánh nặng trong lòng nhé mẹ..." class="w-full p-3.5 rounded-2xl border-2 border-rose-200 focus:border-rose-400 focus:ring-4 focus:ring-rose-100 text-xs font-semibold text-slate-700 outline-none resize-none transition bg-rose-50/30"></textarea>
+                            <div id="recordingWave" class="hidden absolute bottom-3 right-3 items-center space-x-1">
+                                <span class="sound-wave-bar"></span>
+                                <span class="sound-wave-bar"></span>
+                                <span class="sound-wave-bar"></span>
+                                <span class="sound-wave-bar"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="saveMoodEntry()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-400 text-white font-black font-cute text-sm shadow-cute bounce-hover flex items-center justify-center space-x-2">
+                        <span>💖 Lưu Check-in & Đồng Bộ Ngay Cho Bố</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cột Phải: Biểu Đồ Dashboard Tâm Lý Tuần/Tháng -->
+            <div class="space-y-6">
+                <div class="bg-white rounded-[32px] p-6 shadow-cloud border-4 border-rose-100 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm sm:text-base font-black font-cute text-slate-800 flex items-center gap-1.5">
+                            <span>Báo Cáo Tâm Lý</span>
+                            <span>📈</span>
+                        </h3>
+                        <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl text-[11px] font-black font-cute">
+                            <button type="button" onclick="toggleMoodChartPeriod('week')" id="chartPeriod-week" class="px-2.5 py-1 rounded-lg bg-white text-rose-600 shadow-sm">Tuần</button>
+                            <button type="button" onclick="toggleMoodChartPeriod('month')" id="chartPeriod-month" class="px-2.5 py-1 rounded-lg text-slate-500 hover:text-slate-800">Tháng</button>
+                        </div>
+                    </div>
+
+                    <div class="h-44 w-full relative">
+                        <canvas id="moodChart"></canvas>
+                    </div>
+
+                    <!-- Tự Nhận Thức Sức Khỏe Tinh Thần -->
+                    <div id="moodTrendStatus" class="p-3.5 bg-rose-50 rounded-2xl border border-rose-200 flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-lg">📉</span>
+                            <div>
+                                <p class="text-xs font-black font-cute text-rose-600">Tâm trạng đang có xu hướng đi xuống</p>
+                                <p class="text-[10px] text-slate-500">Mẹ dễ xúc động & tủi thân hơn vào buổi tối</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-black px-2 py-0.5 bg-rose-100 text-rose-700 rounded-full font-cute">Cần quan tâm</span>
+                    </div>
+
+                    <p class="text-[11px] text-slate-400 font-semibold leading-relaxed">
+                        💡 Biểu đồ giúp mẹ tự nhận thức được chu kỳ cảm xúc theo tuần, từ đó biết khi nào cần nghỉ ngơi hoặc nhờ người thân hỗ trợ.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODULE 1.2: TRỢ LÝ AI TÂM GIAO 24/7 (AI EMOTIONAL COMPANION) -->
+    <!-- ========================================================================= -->
+    <div id="momSubSection-ai" class="hidden space-y-6">
+        <div class="bg-white rounded-[32px] p-6 sm:p-8 shadow-cloud border-4 border-pink-100 space-y-4">
+            <div class="flex items-center justify-between border-b border-pink-100 pb-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-pink-400 to-rose-400 text-white flex items-center justify-center text-2xl shadow-sm">
+                        🎀
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-black font-cute text-slate-800">Trợ Lý AI Tâm Giao 24/7</h3>
+                        <p class="text-xs text-pink-500 font-bold">Luôn lắng nghe, thấu cảm & tuyệt đối không phán xét</p>
+                    </div>
+                </div>
+                <span class="text-[10px] font-black px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full border border-emerald-200">
+                    🟢 Sẵn sàng 24/7 Ẩn Danh
+                </span>
+            </div>
+
+            <!-- Chat Area -->
+            <div id="chatContainer" class="h-80 overflow-y-auto space-y-3 p-4 bg-pink-50/30 rounded-2xl border border-pink-100 chat-scroll-area">
+                <div class="flex items-start space-x-3">
+                    <div class="w-9 h-9 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 font-bold shadow-sm">
+                        <span>🎀</span>
+                    </div>
+                    <div class="chat-bubble-ai p-4 text-xs sm:text-sm font-semibold text-slate-700 max-w-lg leading-relaxed shadow-sm">
+                        Chào mẹ yêu! Mình là MamaAI. Hôm nay em bé và mẹ có khỏe không? Có điều gì khiến mẹ thấy mỏi mệt hay băn khoăn, mẹ cứ thoải mái trút hết vào đây nhé. Mình luôn ở đây để lắng nghe mẹ! ❤️
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Prompts -->
+            <div class="flex flex-wrap gap-2 pt-1">
+                <button type="button" onclick="sendQuickChat('Hôm nay mình bị mỏi lưng quá, có cách nào đỡ không?')" class="text-xs font-bold text-slate-600 bg-slate-100 hover:bg-pink-100 px-3 py-1.5 rounded-full transition">
+                    🦴 Mỏi lưng quá
+                </button>
+                <button type="button" onclick="sendQuickChat('Đêm trằn trọc khó ngủ quá AI ơi')" class="text-xs font-bold text-slate-600 bg-slate-100 hover:bg-pink-100 px-3 py-1.5 rounded-full transition">
+                    💤 Khó ngủ
+                </button>
+                <button type="button" onclick="sendQuickChat('Chồng vô tâm không hiểu cho nỗi khổ của mình...')" class="text-xs font-bold text-slate-600 bg-slate-100 hover:bg-pink-100 px-3 py-1.5 rounded-full transition">
+                    😭 Chồng vô tâm
+                </button>
+                <button type="button" onclick="sendQuickChat('Em mệt quá, em cảm thấy tuyệt vọng và muốn buông xuôi...')" class="text-xs font-bold text-rose-600 bg-rose-100 hover:bg-rose-200 px-3 py-1.5 rounded-full transition">
+                    🚨 Thử Red-flag SOS
+                </button>
+            </div>
+
+            <!-- Input Box -->
+            <form onsubmit="handleAiChat(event)" class="flex items-center space-x-2 pt-2">
+                <input type="text" id="aiInput" placeholder="Tâm sự ẩn danh cùng AI, không ai biết bạn là ai..." class="flex-grow p-3.5 rounded-2xl border-2 border-pink-200 focus:border-pink-400 text-xs font-semibold text-slate-700 outline-none bg-pink-50/30">
+                <button type="submit" class="px-5 py-3.5 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-2xl font-black font-cute text-xs shadow-cute bounce-hover">
+                    <i class="fa-solid fa-paper-plane mr-1"></i> Gửi
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODULE 1.3: KHÔNG GIAN THỞ ZEN (ZEN SPACE & CONTENT LIBRARY) -->
+    <!-- ========================================================================= -->
+    <div id="momSubSection-zen" class="hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Bài tập thở 4-7-8 -->
+            <div class="bg-white rounded-[32px] p-6 sm:p-8 shadow-cloud border-4 border-emerald-100 space-y-6 text-center">
+                <span class="text-xs font-black uppercase font-cute px-3.5 py-1 bg-emerald-100 text-emerald-700 rounded-full">
+                    Kỹ Thuật Thở 4-7-8 Y Khoa
+                </span>
+                <h3 class="text-lg font-black font-cute text-slate-800">Ngắt Cơn Hoảng Loạn (Panic Attack) Trong 60 Giây</h3>
+                
+                <!-- Breathing Visual Ring -->
+                <div class="relative w-44 h-44 mx-auto flex items-center justify-center">
+                    <div id="breatheRing" class="w-40 h-40 rounded-full border-4 border-emerald-400 bg-emerald-50/60 flex flex-col items-center justify-center transition-all duration-1000 shadow-lg">
+                        <span id="breathPhaseText" class="text-sm font-black font-cute text-emerald-800">Sẵn Sàng</span>
+                        <span id="breathTimer" class="text-2xl font-black font-cute text-emerald-600">4s</span>
+                    </div>
+                </div>
+
+                <p id="breathInstruction" class="text-xs text-slate-500 font-semibold max-w-sm mx-auto leading-relaxed">
+                    Giúp điều hòa nhịp tim, cung cấp oxy cho thai nhi và hạ hormone căng thẳng Cortisol nhanh chóng.
+                </p>
+
+                <button type="button" onclick="toggleBreathingExercise()" id="breathBtn" class="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black font-cute text-xs shadow-md bounce-hover">
+                    🍃 Bắt Đầu Nhịp Thở Zen
+                </button>
+            </div>
+
+            <!-- Kho âm thanh sóng não thực & Yoga -->
+            <div class="bg-white rounded-[32px] p-6 sm:p-8 shadow-cloud border-4 border-emerald-100 space-y-4">
+                <h3 class="text-sm font-black font-cute text-slate-800 flex items-center gap-2">
+                    <span>Kho Nhạc Tần Số Sóng Não & Thai Giáo</span>
+                    <span>🎶</span>
+                </h3>
+
+                <!-- Audio list -->
+                <div class="space-y-2.5">
+                    <div class="p-3 bg-emerald-50/70 rounded-2xl border border-emerald-200 flex items-center justify-between">
+                        <div>
+                            <h4 class="text-xs font-black font-cute text-slate-800">Sóng Não 432Hz Miracle Tone</h4>
+                            <p class="text-[10px] text-slate-500">Giảm căng thẳng thần kinh sâu & ru ngủ</p>
+                        </div>
+                        <button type="button" onclick="playAudioSynthesizer('Sóng Não 432Hz Miracle Tone', 432, 'sine')" class="px-3 py-1.5 bg-emerald-500 text-white rounded-xl text-xs font-bold bounce-hover">
+                            ▶️ Phát Thật
+                        </button>
+                    </div>
+
+                    <div class="p-3 bg-emerald-50/70 rounded-2xl border border-emerald-200 flex items-center justify-between">
+                        <div>
+                            <h4 class="text-xs font-black font-cute text-slate-800">Sóng Não 528Hz DNA Repair</h4>
+                            <p class="text-[10px] text-slate-500">Phục hồi năng lượng tế bào & an dịu tâm trí</p>
+                        </div>
+                        <button type="button" onclick="playAudioSynthesizer('Sóng Não 528Hz DNA Repair', 528, 'sine')" class="px-3 py-1.5 bg-emerald-500 text-white rounded-xl text-xs font-bold bounce-hover">
+                            ▶️ Phát Thật
+                        </button>
+                    </div>
+
+                    <div class="p-3 bg-emerald-50/70 rounded-2xl border border-emerald-200 flex items-center justify-between">
+                        <div>
+                            <h4 class="text-xs font-black font-cute text-slate-800">Tiếng Mưa Rào Pink Noise</h4>
+                            <p class="text-[10px] text-slate-500">Âm thanh trắng cắt đứt tạp âm xung quanh</p>
+                        </div>
+                        <button type="button" onclick="playAudioSynthesizer('Tiếng Mưa Rào Pink Noise', 0, 'pink_noise')" class="px-3 py-1.5 bg-emerald-500 text-white rounded-xl text-xs font-bold bounce-hover">
+                            ▶️ Phát Thật
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Playing Bar -->
+                <div id="audioPlayerBar" class="hidden p-3 bg-slate-900 text-white rounded-2xl flex items-center justify-between text-xs">
+                    <div class="flex items-center space-x-2">
+                        <span class="animate-spin">💿</span>
+                        <span id="currentPlayingTrackName" class="font-bold font-cute">Đang phát nhạc...</span>
+                    </div>
+                    <button type="button" onclick="stopAudioSynthesizer()" class="px-3 py-1 bg-rose-500 rounded-xl font-bold text-white">
+                        Dừng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODULE 1.4: DIỄN ĐÀN GÓC KHUẤT (SAFE SPACE FORUM) -->
+    <!-- ========================================================================= -->
+    <div id="momSubSection-forum" class="hidden space-y-6">
+        <div class="bg-white rounded-[32px] p-6 sm:p-8 shadow-cloud border-4 border-purple-100 space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-purple-100 pb-4">
+                <div>
+                    <h3 class="text-lg font-black font-cute text-slate-800">Cộng Đồng Góc Khuất Ẩn Danh 100%</h3>
+                    <p class="text-xs text-purple-500 font-bold">Nơi mẹ tâm sự chuyện khó nói nhất mà không sợ bất kỳ ai phán xét</p>
+                </div>
+
+                <!-- 3 Phòng Lọc -->
+                <div class="flex items-center space-x-2">
+                    <select id="forumRoomSelect" onchange="renderForumPosts(this.value)" class="p-2 bg-purple-50 rounded-xl border border-purple-200 text-xs font-black font-cute text-purple-800 outline-none">
+                        <option value="all">Tất Cả Các Phòng</option>
+                        <option value="rage">🔥 Phòng Xả Giận</option>
+                        <option value="advice">💡 Phòng Tìm Lời Khuyên</option>
+                        <option value="joy">🌸 Phòng Chia Sẻ Niềm Vui</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Form Đăng Bài -->
+            <div class="p-4 bg-purple-50/50 rounded-2xl border border-purple-200 space-y-2">
+                <textarea id="forumPostText" rows="2" placeholder="Viết tâm sự ẩn danh... Hệ thống sẽ tự cấp biệt danh ngẫu nhiên để bảo vệ bạn tuyệt đối." class="w-full p-3 rounded-xl border border-purple-200 text-xs font-semibold text-slate-700 outline-none resize-none"></textarea>
+                <div class="flex justify-end">
+                    <button type="button" onclick="createNewPost()" class="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-black font-cute text-xs shadow-sm bounce-hover">
+                        ✨ Đăng Ẩn Danh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Post Lists -->
+            <div id="forumPostsList" class="space-y-4">
+                <!-- Rendered dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODULE 1.5: NHẮC LỊCH KHÁM & THUỐC (REMINDERS) -->
+    <!-- ========================================================================= -->
+    <div id="momSubSection-reminders" class="hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Checklist Thuốc -->
+            <div class="bg-white rounded-[32px] p-6 sm:p-8 shadow-cloud border-4 border-sky-100 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-black font-cute text-slate-800">Checklist Uống Thuốc Hôm Nay</h3>
+                        <p id="medProgressPercent" class="text-xs text-sky-600 font-black font-cute">50% (2/4 cữ)</p>
+                    </div>
+                    <button type="button" onclick="addMedicationPrompt()" class="px-3 py-1.5 bg-sky-100 text-sky-700 rounded-xl text-xs font-black font-cute hover:bg-sky-200">
+                        + Thêm Thuốc
+                    </button>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                    <div id="medProgressBar" class="h-full bg-gradient-to-r from-sky-400 to-blue-500 rounded-full med-progress-bar" style="width: 50%;"></div>
+                </div>
+
+                <div id="medList" class="space-y-2 pt-2">
+                    <!-- Rendered dynamically -->
+                </div>
+            </div>
+
+            <!-- Lịch Khám Thai -->
+            <div class="bg-white rounded-[32px] p-6 sm:p-8 shadow-cloud border-4 border-sky-100 space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-black font-cute text-slate-800">Mốc Khám Thai Định Kỳ</h3>
+                    <button type="button" onclick="addAppointmentPrompt()" class="px-3 py-1.5 bg-sky-100 text-sky-700 rounded-xl text-xs font-black font-cute hover:bg-sky-200">
+                        + Đặt Lịch
+                    </button>
+                </div>
+
+                <div id="appointmentList" class="space-y-3 pt-2">
+                    <!-- Rendered dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+</section>

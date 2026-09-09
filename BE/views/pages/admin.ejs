@@ -1,0 +1,223 @@
+<!-- ========================================================================= -->
+<!-- PHÂN HỆ 3: DÀNH CHO BAN QUẢN LÝ DỰ ÁN (VIEW ĐỘC LẬP) -->
+<!-- ========================================================================= -->
+<section id="roleSection-admin" class="space-y-8">
+
+    <!-- Header Banner Quản Trị -->
+    <div class="bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 text-white rounded-[32px] p-6 sm:p-8 shadow-xl relative overflow-hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+            <div>
+                <div class="flex items-center space-x-2">
+                    <span class="px-3 py-1 bg-purple-500/30 text-purple-200 rounded-full text-xs font-black uppercase font-cute border border-purple-400/30">
+                        Admin Control Center
+                    </span>
+                    <span class="text-xs text-slate-300 font-bold">• Cập nhật số liệu thời gian thực</span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-black font-cute mt-1">Bảng Điều Khiển Quản Trị Dự Án MamaCare</h2>
+                <p class="text-xs sm:text-sm text-slate-300 max-w-xl mt-1">
+                    Theo dõi số lượng người dùng, kiểm duyệt bài đăng diễn đàn bằng AI Guard và thống kê doanh thu hệ thống.
+                </p>
+            </div>
+            <button type="button" onclick="exportRevenueReport()" class="px-5 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl font-black font-cute text-xs shadow-md bounce-hover shrink-0 flex items-center space-x-2">
+                <i class="fa-solid fa-file-export"></i>
+                <span>Xuất Báo Cáo Excel</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODULE 4.1: QUẢN LÝ NGƯỜI DÙNG & DỮ LIỆU (KPIs & CHARTS) -->
+    <!-- ========================================================================= -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <div class="kpi-card p-5 bg-white border-blue-200 shadow-sm space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-black text-slate-400 uppercase font-cute">Tổng Người Dùng</span>
+                <span class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold">👥</span>
+            </div>
+            <h4 class="text-2xl font-black font-cute text-slate-800"><%= metrics.totalUsers ? metrics.totalUsers.toLocaleString() : '42,850' %></h4>
+            <span class="text-[11px] font-bold text-emerald-600 flex items-center gap-1">
+                <i class="fa-solid fa-arrow-trend-up"></i> +14.8% so với tháng trước
+            </span>
+        </div>
+
+        <div class="kpi-card p-5 bg-white border-emerald-200 shadow-sm space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-black text-slate-400 uppercase font-cute">Truy Cập Hàng Ngày (DAU)</span>
+                <span class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold">⚡</span>
+            </div>
+            <h4 class="text-2xl font-black font-cute text-slate-800"><%= metrics.dauToday ? metrics.dauToday.toLocaleString() : '8,420' %></h4>
+            <span class="text-[11px] font-bold text-emerald-600 flex items-center gap-1">
+                <i class="fa-solid fa-circle text-[8px] animate-pulse text-emerald-500"></i> Đang hoạt động hôm nay
+            </span>
+        </div>
+
+        <div class="kpi-card p-5 bg-white border-purple-200 shadow-sm space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-black text-slate-400 uppercase font-cute">Cặp Đôi Đã Liên Kết QR</span>
+                <span class="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-sm font-bold">💍</span>
+            </div>
+            <h4 class="text-2xl font-black font-cute text-slate-800"><%= metrics.activePairs ? metrics.activePairs.toLocaleString() : '18,920' %></h4>
+            <span class="text-[11px] font-bold text-purple-600">
+                Tỷ lệ tương tác chồng: 88.4%
+            </span>
+        </div>
+
+        <div class="kpi-card p-5 bg-white border-rose-200 shadow-sm space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-black text-slate-400 uppercase font-cute">Ca SOS Khẩn Cấp Đã Cứu</span>
+                <span class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-sm font-bold">🚨</span>
+            </div>
+            <h4 class="text-2xl font-black font-cute text-rose-600" id="adminSosCount"><%= metrics.sosResolved || 14 %></h4>
+            <span class="text-[11px] font-bold text-rose-500">
+                100% Đã kết nối chuyên gia y tế
+            </span>
+        </div>
+
+    </div>
+
+    <!-- Biểu đồ phân tích dữ liệu cộng đồng -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-white rounded-[32px] p-6 shadow-cloud border-4 border-slate-100 space-y-4">
+            <h3 class="text-sm font-black font-cute text-slate-800 flex items-center gap-2">
+                <span>Tốc Độ Tăng Trưởng Người Dùng Mẹ Bầu (6 Tháng Gần Nhất)</span>
+                <span>📊</span>
+            </h3>
+            <div class="h-56 w-full relative">
+                <canvas id="userGrowthChart"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-[32px] p-6 shadow-cloud border-4 border-slate-100 space-y-4">
+            <h3 class="text-sm font-black font-cute text-slate-800 flex items-center gap-2">
+                <span>Phân Bổ Chỉ Số Tâm Lý Cộng Đồng</span>
+                <span>🧠</span>
+            </h3>
+            <div class="h-56 w-full relative flex items-center justify-center">
+                <canvas id="communityMoodChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODULE 4.2: KIỂM DUYỆT NỘI DUNG (CONTENT MODERATION QUEUE) -->
+    <!-- ========================================================================= -->
+    <div class="bg-white rounded-[32px] p-6 sm:p-8 shadow-cloud border-4 border-rose-100 space-y-5">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-black font-cute text-slate-800 flex items-center gap-2">
+                    <span>Hàng Đợi Kiểm Duyệt Nội Dung & Tự Động Xóa Độc Hại</span>
+                    <span>🛡️</span>
+                </h3>
+                <p class="text-xs text-slate-400 font-semibold">AI Guard tự động gắn cờ các bài đăng chứa từ ngữ tiêu cực, quảng cáo sai sự thật hoặc cảnh báo SOS</p>
+            </div>
+            <span class="text-xs font-black font-cute px-3 py-1 bg-rose-100 text-rose-700 rounded-full">
+                <%= moderationQueue.length %> Yêu Cầu Cần Xử Lý
+            </span>
+        </div>
+
+        <!-- Bảng Hàng Đợi Kiểm Duyệt -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left moderation-table">
+                <thead>
+                    <tr class="text-[11px] font-black uppercase text-slate-400 border-b border-slate-200">
+                        <th class="py-3 px-3">Tác Giả</th>
+                        <th class="py-3 px-3">Tiêu Đề & Nội Dung Bài Viết</th>
+                        <th class="py-3 px-3">Lý Do Gắn Cờ</th>
+                        <th class="py-3 px-3">Thao Tác Quản Trị</th>
+                    </tr>
+                </thead>
+                <tbody id="adminModerationTbody">
+                    <% moderationQueue.forEach(item => { %>
+                        <tr class="moderation-row shadow-sm rounded-2xl border border-slate-100">
+                            <td class="py-4 px-3 font-bold text-xs text-slate-700 whitespace-nowrap">
+                                <span class="px-2 py-1 bg-slate-100 rounded-lg"><%= item.author %></span>
+                            </td>
+                            <td class="py-4 px-3 max-w-xs sm:max-w-md">
+                                <h5 class="text-xs font-black font-cute text-slate-800"><%= item.title %></h5>
+                                <p class="text-[11px] text-slate-500 font-medium line-clamp-2 mt-0.5"><%= item.content %></p>
+                            </td>
+                            <td class="py-4 px-3 whitespace-nowrap">
+                                <% if (item.status === 'urgent_sos') { %>
+                                    <span class="px-2.5 py-1 text-[10px] font-black font-cute rounded-full badge-sos-urgent">
+                                        🚨 SOS KHẨN CẤP
+                                    </span>
+                                <% } else { %>
+                                    <span class="px-2.5 py-1 text-[10px] font-black font-cute rounded-full badge-pending">
+                                        ⚠️ <%= item.reason %>
+                                    </span>
+                                <% } %>
+                            </td>
+                            <td class="py-4 px-3 action-cell whitespace-nowrap">
+                                <div class="flex items-center space-x-2">
+                                    <% if (item.status === 'urgent_sos') { %>
+                                        <button type="button" onclick="adminSosContact('<%= item.id %>', this)" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black font-cute shadow-sm">
+                                            Can Thiệp SOS
+                                        </button>
+                                    <% } else { %>
+                                        <button type="button" onclick="adminApprove('<%= item.id %>', this)" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-black font-cute shadow-sm">
+                                            Duyệt
+                                        </button>
+                                    <% } %>
+                                    <button type="button" onclick="adminDelete('<%= item.id %>', this)" class="px-3 py-1.5 bg-slate-100 hover:bg-rose-50 text-rose-600 rounded-xl text-xs font-black font-cute border border-slate-200 hover:border-rose-300">
+                                        Xóa Bài
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODULE 4.3: QUẢN LÝ DOANH THU (REVENUE MANAGEMENT) -->
+    <!-- ========================================================================= -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <div class="lg:col-span-1 bg-white rounded-[32px] p-6 shadow-cloud border-4 border-emerald-100 space-y-4">
+            <h3 class="text-sm font-black font-cute text-slate-800 flex items-center gap-2">
+                <span>Cơ Cấu Doanh Thu Tháng 9/2026</span>
+                <span>💰</span>
+            </h3>
+            <div class="p-5 revenue-highlight rounded-2xl space-y-2 text-white">
+                <span class="text-xs uppercase font-cute tracking-wider opacity-90">Tổng Doanh Thu Đạt Được:</span>
+                <h4 class="text-2xl sm:text-3xl font-black font-cute">185,450,000 đ</h4>
+                <p class="text-xs text-emerald-100 font-bold">+18.2% tăng trưởng so với tháng 8</p>
+            </div>
+            <div class="h-44 w-full relative flex items-center justify-center">
+                <canvas id="revenuePieChart"></canvas>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2 bg-white rounded-[32px] p-6 shadow-cloud border-4 border-emerald-100 space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-black font-cute text-slate-800">Giao Dịch Đặt Lịch Chuyên Gia & Mua Gói Gần Nhất</h3>
+                <span class="text-xs text-slate-400 font-bold">Cập nhật 5 phút trước</span>
+            </div>
+
+            <div class="space-y-2.5 text-xs">
+                <% (revenueData.transactions || []).forEach(tx => { %>
+                    <div class="p-3.5 bg-slate-50 rounded-2xl flex items-center justify-between border border-slate-200 transaction-item">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
+                                💎
+                            </div>
+                            <div>
+                                <h5 class="font-black font-cute text-slate-800"><%= tx.user %></h5>
+                                <p class="text-[11px] text-slate-500 font-semibold"><%= tx.package %></p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-black font-cute text-emerald-600 block"><%= (tx.amount || 0).toLocaleString() %> đ</span>
+                            <span class="text-[10px] text-slate-400 font-bold"><%= tx.date %></span>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        </div>
+
+    </div>
+
+</section>

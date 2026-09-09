@@ -1,0 +1,46 @@
+<!-- TOP GLOBAL HEADER & ROLE NAVIGATION -->
+<header class="bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b-4 border-rose-100 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        <!-- Brand Logo -->
+        <a href="/mom" class="flex items-center space-x-3 group">
+            <div class="w-12 h-12 rounded-3xl bg-gradient-to-tr from-rose-400 via-pink-300 to-amber-200 flex items-center justify-center text-white shadow-cute bounce-hover cursor-pointer border-2 border-white">
+                <span class="text-2xl animate-bounce">🍼</span>
+            </div>
+            <div>
+                <div class="flex items-center space-x-1.5">
+                    <span class="text-2xl font-black font-cute tracking-wide bg-gradient-to-r from-rose-500 via-pink-400 to-purple-500 bg-clip-text text-transparent">MamaCare</span>
+                    <span class="bg-amber-100 text-amber-700 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-300">Bỉm Sữa ✨</span>
+                    <span id="nodeBackendBadge" class="hidden items-center gap-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-300 shadow-sm">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>Node.js Online</span>
+                    </span>
+                </div>
+                <span class="hidden sm:block text-xs text-slate-400 font-bold">Trạm Đồng Hành Thai Kỳ & Sức Khỏe Tinh Thần</span>
+            </div>
+        </a>
+
+        <!-- Role Switcher Links (Node.js Routes) -->
+        <div class="flex items-center space-x-2">
+            <div class="bg-rose-50 p-1.5 rounded-full flex items-center space-x-1 border-2 border-rose-100 shadow-inner">
+                <a href="/mom" id="nav-mom" class="role-btn px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-black transition-all duration-300 flex items-center space-x-1.5 <%= activePage === 'mom' ? 'bg-white text-rose-600 shadow-cute border-2 border-rose-100' : 'text-slate-500 hover:text-slate-800' %>">
+                    <span>🌸</span>
+                    <span class="font-cute">Mẹ Bầu</span>
+                </a>
+                <a href="/husband" id="nav-husband" class="role-btn px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-extrabold transition-all duration-300 flex items-center space-x-1.5 <%= activePage === 'husband' ? 'bg-white text-blue-600 shadow-cute border-2 border-blue-100' : 'text-slate-500 hover:text-slate-800' %> relative">
+                    <span>🧸</span>
+                    <span class="font-cute">Bố Bỉm</span>
+                    <span id="husbandBadgeDot" class="w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white absolute -top-1 -right-1 animate-ping hidden"></span>
+                </a>
+                <a href="/admin" id="nav-admin" class="role-btn px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-extrabold transition-all duration-300 flex items-center space-x-1.5 <%= activePage === 'admin' ? 'bg-white text-purple-600 shadow-cute border-2 border-purple-100' : 'text-slate-500 hover:text-slate-800' %>">
+                    <span>📊</span>
+                    <span class="font-cute">Admin</span>
+                </a>
+            </div>
+
+            <!-- Bell simulation trigger -->
+            <button type="button" onclick="triggerHusbandPushAlert('Vợ Đang Quá Tải', 'Vợ vừa check-in mỏi thắt lưng. Hãy rửa bát và ôm vợ nhé!')" title="Mô phỏng gửi Push Notification cho Chồng" class="w-10 h-10 rounded-full bg-amber-50 hover:bg-amber-100 border-2 border-amber-200 flex items-center justify-center text-amber-600 text-sm shadow-sm bounce-hover">
+                <i class="fa-solid fa-bell"></i>
+            </button>
+        </div>
+    </div>
+</header>

@@ -1,0 +1,27 @@
+{
+  "name": "mamacare-be",
+  "version": "1.0.0",
+  "description": "Backend API Server for MamaCare Pregnancy & Mental Health Platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "seed": "node scripts/seed.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "ejs": "^6.0.1",
+    "express": "^4.21.2",
+    "mongodb-memory-server": "^11.2.0",
+    "mongoose": "^9.9.5"
+  },
+  "keywords": [
+    "pregnancy",
+    "mental-health",
+    "nodejs",
+    "express"
+  ],
+  "author": "MamaCare Team",
+  "license": "ISC"
+}

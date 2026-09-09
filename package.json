@@ -1,0 +1,30 @@
+{
+  "name": "mamacare-platform",
+  "version": "1.0.0",
+  "description": "MamaCare - Hệ Sinh Thái Đồng Hành Thai Kỳ & Sức Khỏe Tinh Thần Bỉm Sữa Fullstack Node.js & MongoDB Atlas",
+  "scripts": {
+    "build": "npm --prefix FE install --legacy-peer-deps && npm --prefix FE run build",
+    "vercel-build": "npm --prefix FE install --legacy-peer-deps && npm --prefix FE run build",
+    "start": "node BE/server.js",
+    "dev": "node --watch BE/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^8.9.2"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^11.2.0"
+  },
+  "keywords": [
+    "pregnancy",
+    "mental-health",
+    "nodejs",
+    "mamacare",
+    "vercel",
+    "mongodb"
+  ],
+  "author": "MamaCare Team",
+  "license": "ISC"
+}

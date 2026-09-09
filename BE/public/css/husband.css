@@ -1,0 +1,84 @@
+/* =========================================================================
+   MAMACARE - HUSBAND PAGE CSS (PHÂN HỆ 2: DÀNH CHO CHỒNG)
+   Tệp CSS chuyên biệt cho giao diện Bố Bỉm
+   ========================================================================= */
+
+/* Thẻ thời tiết cảm xúc lớn */
+.weather-hero-card {
+    border-radius: 36px;
+    border-width: 4px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s ease;
+}
+
+.weather-hero-sunny {
+    background: linear-gradient(135deg, rgba(254, 243, 199, 0.9) 0%, rgba(254, 215, 170, 0.9) 100%);
+    border-color: #FCD34D;
+}
+
+.weather-hero-rainy {
+    background: linear-gradient(135deg, rgba(224, 242, 254, 0.9) 0%, rgba(199, 210, 254, 0.9) 100%);
+    border-color: #93C5FD;
+}
+
+.weather-hero-stormy {
+    background: linear-gradient(135deg, rgba(255, 228, 230, 0.9) 0%, rgba(254, 205, 211, 0.9) 100%);
+    border-color: #FDA4AF;
+}
+
+/* Hiệu ứng mây bay nền */
+@keyframes cloudDrift {
+    0% { transform: translateX(-15px); }
+    50% { transform: translateX(15px); }
+    100% { transform: translateX(-15px); }
+}
+
+.cloud-drift {
+    animation: cloudDrift 8s ease-in-out infinite;
+}
+
+/* Thẻ Gợi Ý Cứu Vợ (Actionable Tips) */
+.rescue-tip-card {
+    border-radius: 24px;
+    border-width: 2px;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.rescue-tip-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 28px -6px rgba(244, 63, 94, 0.15);
+}
+
+/* Khóa học làm ba Daddy Bootcamp Micro-learning */
+.bootcamp-card {
+    border-radius: 28px;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    cursor: pointer;
+}
+
+.bootcamp-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 36px -8px rgba(14, 165, 233, 0.2);
+}
+
+/* Toast Slide Down Animation cho Push Notification */
+@keyframes toastSlide {
+    0% { transform: translateY(-100%); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+.toast-animate {
+    animation: toastSlide 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Hiệu ứng rung chuông báo động */
+@keyframes bellRing {
+    0%, 100% { transform: rotate(0); }
+    20%, 60% { transform: rotate(15deg); }
+    40%, 80% { transform: rotate(-15deg); }
+}
+
+.bell-ring {
+    animation: bellRing 1.5s ease infinite;
+}

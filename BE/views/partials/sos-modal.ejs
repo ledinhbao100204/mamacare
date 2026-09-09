@@ -1,0 +1,59 @@
+<!-- MODAL CẢNH BÁO ĐỎ: HỖ TRỢ SOS KHẨN CẤP -->
+<div id="sosModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md hidden p-4">
+    <div class="bg-white rounded-[36px] max-w-lg w-full p-6 sm:p-8 shadow-2xl border-4 border-rose-300 space-y-6 relative overflow-hidden animate-in fade-in zoom-in duration-300">
+        <div class="flex items-center space-x-3 text-rose-600">
+            <div class="w-12 h-12 rounded-2xl bg-rose-100 flex items-center justify-center text-2xl animate-pulse">
+                🚨
+            </div>
+            <div>
+                <h3 class="text-lg sm:text-xl font-black font-cute">Hệ Thống Cảnh Báo Đỏ (SOS)</h3>
+                <p class="text-xs text-rose-500 font-bold">MamaAI nhận thấy mẹ đang trải qua thời điểm cực kỳ khó khăn</p>
+            </div>
+        </div>
+
+        <div class="p-4 bg-rose-50 rounded-2xl border border-rose-100 space-y-2 text-xs text-slate-700 leading-relaxed font-semibold">
+            <p>Mẹ ơi, mọi cảm xúc của mẹ lúc này đều đáng được trân trọng và lắng nghe. Mẹ hãy dừng lại một nhịp thở, mẹ không hề đơn độc một mình lúc này đâu ạ!</p>
+            <p class="text-rose-600 font-bold">Hãy bấm gọi ngay các đường dây nóng hỗ trợ miễn phí bên dưới để có bác sĩ & chuyên gia tâm lý ở bên cạnh mẹ:</p>
+        </div>
+
+        <!-- Hotlines -->
+        <div class="space-y-2.5">
+            <a href="tel:111" class="flex items-center justify-between p-3.5 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-2xl font-black font-cute shadow-cute hover:opacity-95 transition">
+                <div class="flex items-center space-x-3">
+                    <span class="text-xl">📞</span>
+                    <div class="text-left">
+                        <p class="text-xs uppercase opacity-80">Tổng đài Quốc gia Bảo vệ Trẻ em & Phụ nữ</p>
+                        <p class="text-base">Hotline: 111 (Miễn cước 24/7)</p>
+                    </div>
+                </div>
+                <span class="px-3 py-1 bg-white/20 rounded-full text-xs">Gọi Ngay</span>
+            </a>
+
+            <a href="tel:1900636700" class="flex items-center justify-between p-3.5 bg-sky-500 text-white rounded-2xl font-black font-cute shadow-sm hover:opacity-95 transition">
+                <div class="flex items-center space-x-3">
+                    <span class="text-xl">🧠</span>
+                    <div class="text-left">
+                        <p class="text-xs uppercase opacity-80">Đường dây nóng Sức khỏe Tinh thần</p>
+                        <p class="text-base">Hotline: 1900 636 700</p>
+                    </div>
+                </div>
+                <span class="px-3 py-1 bg-white/20 rounded-full text-xs">Gọi Ngay</span>
+            </a>
+
+            <a href="tel:115" class="flex items-center justify-between p-3.5 bg-emerald-600 text-white rounded-2xl font-black font-cute shadow-sm hover:opacity-95 transition">
+                <div class="flex items-center space-x-3">
+                    <span class="text-xl">🚑</span>
+                    <div class="text-left">
+                        <p class="text-xs uppercase opacity-80">Cấp cứu Y tế Khẩn cấp Toàn quốc</p>
+                        <p class="text-base">Hotline: 115</p>
+                    </div>
+                </div>
+                <span class="px-3 py-1 bg-white/20 rounded-full text-xs">Gọi Ngay</span>
+            </a>
+        </div>
+
+        <button type="button" onclick="closeSosModal()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black font-cute rounded-2xl text-xs transition">
+            Đóng thông báo (Em đã ổn định hơn rồi)
+        </button>
+    </div>
+</div>

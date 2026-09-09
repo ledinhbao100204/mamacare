@@ -1,0 +1,2587 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MamaCare - Nền Tảng Đồng Hành Thai Kỳ & Sức Khỏe Tinh Thần Bỉm Sữa</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Dashboards -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts: Fredoka & Nunito for ultra-cute warm baby vibes -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- MamaCare Node.js Client SDK -->
+    <script src="js/api.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        mama: {
+                            50: '#FFF0F5',
+                            100: '#FFE4EC',
+                            200: '#FFCCD8',
+                            300: '#FFA3B8',
+                            400: '#FF7597',
+                            500: '#FF4D79',
+                            600: '#E62E5C',
+                            700: '#C21843',
+                        },
+                        baby: {
+                            50: '#F0F9FF',
+                            100: '#E0F2FE',
+                            200: '#BAE6FD',
+                            300: '#7DD3FC',
+                            400: '#38BDF8',
+                            500: '#0EA5E9',
+                            600: '#0284C7',
+                            700: '#0369A1',
+                        },
+                        butter: {
+                            50: '#FEFCE8',
+                            100: '#FEF9C3',
+                            200: '#FEF08A',
+                            300: '#FDE047',
+                            400: '#FACC15',
+                            500: '#EAB308',
+                        },
+                        mint: {
+                            50: '#F0FDF4',
+                            100: '#DCFCE7',
+                            200: '#BBF7D0',
+                            300: '#86EFAC',
+                            400: '#4ADE80',
+                            500: '#22C55E',
+                            600: '#16A34A',
+                            700: '#15803D',
+                        },
+                        lavender: {
+                            50: '#FAF5FF',
+                            100: '#F3E8FF',
+                            200: '#E9D5FF',
+                            300: '#D8B4FE',
+                            400: '#C084FC',
+                            500: '#A855F7',
+                            600: '#9333EA',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                        cute: ['Fredoka', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'cloud': '0 10px 30px -5px rgba(255, 182, 193, 0.35)',
+                        'cute': '0 8px 0px 0px rgba(255, 204, 216, 0.8)',
+                        'cute-blue': '0 8px 0px 0px rgba(186, 230, 253, 0.8)',
+                        'cute-mint': '0 8px 0px 0px rgba(187, 247, 208, 0.8)',
+                        'cute-butter': '0 8px 0px 0px rgba(254, 240, 138, 0.9)',
+                        'bubble': '0 20px 40px -15px rgba(255, 117, 151, 0.25)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #FFF9FA;
+            background-image: 
+                radial-gradient(#FFCCD8 1.2px, transparent 1.2px), 
+                radial-gradient(#BAE6FD 1.2px, #FFF9FA 1.2px);
+            background-size: 48px 48px;
+            background-position: 0 0, 24px 24px;
+        }
+
+        /* Cute Bouncy Hover & Click */
+        .bounce-hover {
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .bounce-hover:hover {
+            transform: translateY(-4px) scale(1.02);
+        }
+        .bounce-click:active {
+            transform: translateY(2px) scale(0.98);
+        }
+
+        /* Smooth Breathing Ring Animation */
+        @keyframes breatheCute {
+            0%, 100% { transform: scale(1); opacity: 0.85; filter: drop-shadow(0 0 15px rgba(255,182,193,0.6)); }
+            50% { transform: scale(1.4); opacity: 0.45; filter: drop-shadow(0 0 35px rgba(255,182,193,0.95)); }
+        }
+        .breathe-circle-cute {
+            animation: breatheCute 8s ease-in-out infinite;
+        }
+
+        /* Floating Cloud Animations */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(2deg); }
+        }
+        .float-cute {
+            animation: floatSlow 4s ease-in-out infinite;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FFE4EC;
+            border-radius: 20px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #FF7597;
+            border-radius: 20px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #FF4D79;
+        }
+
+        /* Symptom Chip Active */
+        .symptom-chip-active {
+            background-color: #FF4D79 !important;
+            color: #FFFFFF !important;
+            border-color: #FF7597 !important;
+            box-shadow: 0 4px 12px rgba(255, 77, 121, 0.35);
+            transform: scale(1.03);
+        }
+
+        /* Active Mood Option Card */
+        .mood-opt-active {
+            border-color: #FF4D79 !important;
+            background-color: #FFE4EC !important;
+            box-shadow: 0 8px 20px rgba(255, 77, 121, 0.35) !important;
+            transform: scale(1.05) translateY(-3px) !important;
+        }
+
+        /* Sound Wave Pulse */
+        @keyframes soundWave {
+            0%, 100% { height: 6px; }
+            50% { height: 24px; }
+        }
+        .sound-wave-bar {
+            animation: soundWave 1.2s ease-in-out infinite;
+        }
+        .sound-wave-bar:nth-child(2) { animation-delay: 0.2s; }
+        .sound-wave-bar:nth-child(3) { animation-delay: 0.4s; }
+        .sound-wave-bar:nth-child(4) { animation-delay: 0.6s; }
+        .sound-wave-bar:nth-child(5) { animation-delay: 0.3s; }
+
+        /* Notification Toast Slide Down */
+        @keyframes toastSlide {
+            0% { transform: translateY(-100%); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        .toast-animate {
+            animation: toastSlide 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-mama-200 selection:text-mama-700">
+
+    <!-- ========================================================================= -->
+    <!-- REAL-TIME MOBILE NOTIFICATION BANNER (VŨ KHÍ BÍ MẬT PUSH NOTIFICATION) -->
+    <!-- ========================================================================= -->
+    <div id="pushNotificationBanner" class="fixed top-5 right-5 z-50 max-w-md w-[92%] sm:w-[420px] hidden toast-animate">
+        <div class="bg-gradient-to-r from-slate-900 via-rose-950 to-slate-900 text-white rounded-[28px] p-5 shadow-2xl border-2 border-rose-400/80 backdrop-blur-xl space-y-3 relative overflow-hidden">
+            <!-- Glow background -->
+            <div class="absolute -top-12 -right-12 w-32 h-32 bg-rose-500/30 rounded-full blur-2xl"></div>
+            
+            <div class="flex items-start justify-between relative z-10">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 to-amber-400 text-white flex items-center justify-center text-xl shadow-md animate-bounce">
+                        🔔
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-black uppercase tracking-wider text-rose-300 font-cute">MamaCare Push Alert</span>
+                            <span class="text-[10px] bg-rose-500/40 text-rose-200 px-2 py-0.5 rounded-full font-bold">Thời gian thực</span>
+                        </div>
+                        <h4 class="text-sm font-black font-cute text-white" id="pushNotifTitle">Vợ bạn đang bị quá tải cảm xúc!</h4>
+                    </div>
+                </div>
+                <button type="button" onclick="dismissPushNotif()" class="text-slate-400 hover:text-white text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <p id="pushNotifBody" class="text-xs text-rose-100/90 font-medium leading-relaxed bg-white/10 p-3 rounded-2xl border border-white/15">
+                "Vợ bạn hôm nay đang bị quá tải. Lời khuyên: Hãy rủ cô ấy đi dạo, mua món cô ấy thích hoặc chủ động rửa bát tối nay nhé!"
+            </p>
+
+            <!-- Quick Action Buttons for Husband -->
+            <div class="pt-1 flex flex-wrap gap-2 text-xs font-bold" id="pushActionButtons">
+                <button type="button" onclick="husbandQuickAction('dish')" class="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-full font-cute shadow-sm bounce-click">
+                    🧼 Tối nay anh rửa bát
+                </button>
+                <button type="button" onclick="husbandQuickAction('milk_tea')" class="px-3 py-1.5 bg-butter-400 hover:bg-butter-500 text-slate-900 rounded-full font-cute shadow-sm bounce-click">
+                    🧋 Mua món vợ thích
+                </button>
+                <button type="button" onclick="husbandQuickAction('hug')" class="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-full font-cute bounce-click">
+                    ❤️ Ôm vợ thật chặt
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HUSBAND RESPONSE TOAST FOR MOM -->
+    <div id="momResponseToast" class="fixed top-24 right-5 z-50 max-w-sm hidden toast-animate">
+        <div class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-[24px] p-4 shadow-xl border-2 border-mint-300 flex items-center space-x-3">
+            <span class="text-2xl animate-bounce">💌</span>
+            <div class="text-xs">
+                <p class="font-black font-cute text-butter-200">Tin Nhắn Yêu Thương Từ Chồng:</p>
+                <p id="momResponseMsg" class="font-semibold text-white mt-0.5">Anh đã nhận được thông báo rồi, tối nay anh rửa bát và mua trà sữa cho vợ nhé! ❤️</p>
+            </div>
+            <button type="button" onclick="document.getElementById('momResponseToast').classList.add('hidden')" class="text-white/70 hover:text-white text-sm">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- TOP GLOBAL HEADER & ROLE SWITCHER -->
+    <!-- ========================================================================= -->
+    <header class="bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b-4 border-mama-100 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 rounded-3xl bg-gradient-to-tr from-mama-400 via-rose-300 to-butter-200 flex items-center justify-center text-white shadow-cute bounce-hover cursor-pointer border-2 border-white">
+                    <span class="text-2xl animate-bounce">🍼</span>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-1.5">
+                        <span class="text-2xl font-black font-cute tracking-wide bg-gradient-to-r from-mama-500 via-rose-400 to-lavender-500 bg-clip-text text-transparent">MamaCare</span>
+                        <span class="bg-butter-100 text-amber-700 text-[10px] font-black px-2 py-0.5 rounded-full border border-butter-300">Bỉm Sữa ✨</span>
+                        <span id="nodeBackendBadge" class="hidden items-center gap-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-300 shadow-sm">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>Node.js Online</span>
+                        </span>
+                    </div>
+                    <span class="hidden sm:block text-xs text-slate-400 font-bold">Trạm Đồng Hành Thai Kỳ & Sức Khỏe Tinh Thần</span>
+                </div>
+            </div>
+
+            <!-- Role Switcher Pills -->
+            <div class="flex items-center space-x-2">
+                <div class="bg-mama-50 p-1.5 rounded-full flex items-center space-x-1 border-2 border-mama-100 shadow-inner">
+                    <button type="button" onclick="switchRole('mom')" id="roleBtn-mom" class="role-btn px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-black transition-all duration-300 flex items-center space-x-1.5 bg-white text-mama-600 shadow-cute border-2 border-mama-100">
+                        <span>🌸</span>
+                        <span class="font-cute">Mẹ Bầu</span>
+                    </button>
+                    <button type="button" onclick="switchRole('husband')" id="roleBtn-husband" class="role-btn px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-extrabold transition-all duration-300 flex items-center space-x-1.5 text-slate-500 hover:text-slate-800 relative">
+                        <span>🧸</span>
+                        <span class="font-cute">Bố Bỉm</span>
+                        <span id="husbandBadgeDot" class="w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white absolute -top-1 -right-1 animate-ping hidden"></span>
+                    </button>
+                    <button type="button" onclick="switchRole('admin')" id="roleBtn-admin" class="role-btn px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-extrabold transition-all duration-300 flex items-center space-x-1.5 text-slate-500 hover:text-slate-800">
+                        <span>📊</span>
+                        <span class="font-cute">Admin</span>
+                    </button>
+                </div>
+
+                <!-- Live Bell Button Simulator -->
+                <button type="button" onclick="triggerSimulatedPush('Đau thắt lưng', '😭 Tủi thân')" title="Mô phỏng gửi Push Notification cho Chồng" class="w-10 h-10 rounded-full bg-butter-50 hover:bg-butter-100 border-2 border-butter-200 flex items-center justify-center text-amber-600 text-sm shadow-sm bounce-hover">
+                    <i class="fa-solid fa-bell"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+
+    <!-- ========================================================================= -->
+    <!-- MAIN CONTENT AREA -->
+    <!-- ========================================================================= -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full">
+
+        <!-- ========================================================================= -->
+        <!-- PHÂN HỆ 1: DÀNH CHO MẸ BẦU (MOM MODULE) -->
+        <!-- ========================================================================= -->
+        <section id="roleSection-mom" class="space-y-6">
+            <!-- Mom Module Sub-Navigation -->
+            <div class="flex overflow-x-auto space-x-2 pb-2 no-scrollbar">
+                <button type="button" onclick="switchMomTab('mood')" id="momTab-mood" class="mom-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold font-cute whitespace-nowrap bg-gradient-to-r from-mama-400 to-rose-400 text-white shadow-cute border-2 border-white bounce-hover">
+                    <i class="fa-solid fa-heart-pulse mr-2"></i>1.1 Trạm Cảm Xúc & Sức Khỏe 🌈
+                </button>
+                <button type="button" onclick="switchMomTab('ai')" id="momTab-ai" class="mom-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold font-cute whitespace-nowrap bg-white text-slate-600 border-2 border-slate-100 hover:border-mama-200 bounce-hover">
+                    <i class="fa-solid fa-robot mr-2 text-mama-400"></i>1.2 Trợ Lý AI Tâm Giao 🎀
+                </button>
+                <button type="button" onclick="switchMomTab('zen')" id="momTab-zen" class="mom-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold font-cute whitespace-nowrap bg-white text-slate-600 border-2 border-slate-100 hover:border-mint-200 bounce-hover">
+                    <i class="fa-solid fa-spa mr-2 text-mint-500"></i>1.3 Không Gian Thở Zen 🍃
+                </button>
+                <button type="button" onclick="switchMomTab('forum')" id="momTab-forum" class="mom-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold font-cute whitespace-nowrap bg-white text-slate-600 border-2 border-slate-100 hover:border-lavender-200 bounce-hover">
+                    <i class="fa-solid fa-comments mr-2 text-lavender-400"></i>1.4 Diễn Đàn Góc Khuất ☁️
+                </button>
+                <button type="button" onclick="switchMomTab('reminders')" id="momTab-reminders" class="mom-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold font-cute whitespace-nowrap bg-white text-slate-600 border-2 border-slate-100 hover:border-baby-200 bounce-hover">
+                    <i class="fa-solid fa-calendar-check mr-2 text-baby-400"></i>1.5 Lịch Khám & Thuốc 💊
+                </button>
+            </div>
+
+            <!-- MODULE 1.1: TRẠM CẢM XÚC (MOOD TRACKING & ANALYTICS) -->
+            <div id="momSubSection-mood" class="space-y-6">
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    <!-- LEFT COLUMN: Main Daily Check-in Form -->
+                    <div class="lg:col-span-2 space-y-6">
+                        
+                        <!-- CARD 1: Check-in Cảm Xúc Hàng Ngày (5 Giây) & Triệu Chứng -->
+                        <div class="bg-white rounded-[32px] p-6 sm:p-8 shadow-cloud border-4 border-mama-100 space-y-6 relative overflow-hidden">
+                            <div class="flex items-center justify-between relative z-10">
+                                <div>
+                                    <h2 class="text-xl sm:text-2xl font-black font-cute text-slate-800 flex items-center gap-2">
+                                        <span>Check-in Cảm Xúc Hôm Nay</span>
+                                        <span class="text-2xl float-cute">✨</span>
+                                    </h2>
+                                    <p class="text-xs font-semibold text-slate-400 mt-1">Chỉ mất 5 giây để ghi nhận cảm xúc & tự động đồng bộ sang Bố Bỉm</p>
+                                </div>
+                                <span class="text-xs font-black px-4 py-1.5 bg-gradient-to-r from-mama-100 to-rose-100 text-mama-700 rounded-full border-2 border-mama-200 shadow-sm flex items-center gap-1">
+                                    <span>👶</span> Tuần thai 24
+                                </span>
+                            </div>
+
+                            <!-- 1. Emoji Picker (5 Cảm xúc cốt lõi: Vui, Buồn, Cáu gắt, Tủi thân, Lo âu) -->
+                            <div class="space-y-2">
+                                <label class="text-xs font-black font-cute text-slate-700 uppercase tracking-wider block flex items-center justify-between">
+                                    <span>1. Chọn biểu tượng cảm xúc (Chỉ 5 giây):</span>
+                                    <span id="selectedMoodNotice" class="text-[11px] font-extrabold text-rose-500 font-cute">Đang chọn: 😭 Tủi thân</span>
+                                </label>
+                                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3" id="moodButtonsGroup">
+                                    <!-- 1. Vui vẻ -->
+                                    <button type="button" onclick="selectMood('Nắng Rực Rỡ', '🥰', 'Đang rất vui vẻ & Hạnh phúc', this)" class="mood-opt group p-3 rounded-[22px] bg-butter-50 hover:bg-butter-100 border-2 border-butter-300 flex flex-col items-center space-y-1 bounce-hover transition">
+                                        <span class="text-3xl group-hover:scale-125 transition-transform">🥰</span>
+                                        <span class="text-xs font-black text-amber-700 font-cute">Vui Vẻ</span>
+                                        <span class="text-[10px] text-amber-600 font-semibold">Nắng đẹp</span>
+                                    </button>
+                                    <!-- 2. Buồn bã -->
+                                    <button type="button" onclick="selectMood('Mưa Rào', '😢', 'Buồn bã, mệt mỏi trong người', this)" class="mood-opt group p-3 rounded-[22px] bg-baby-50 hover:bg-baby-100 border-2 border-baby-200 flex flex-col items-center space-y-1 bounce-hover transition">
+                                        <span class="text-3xl group-hover:scale-125 transition-transform">😢</span>
+                                        <span class="text-xs font-black text-baby-700 font-cute">Buồn Bã</span>
+                                        <span class="text-[10px] text-baby-600 font-semibold">Mưa rào</span>
+                                    </button>
+                                    <!-- 3. Cáu gắt -->
+                                    <button type="button" onclick="selectMood('Sấm Chớp', '😤', 'Cáu gắt, bực bội vì hormone', this)" class="mood-opt group p-3 rounded-[22px] bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 flex flex-col items-center space-y-1 bounce-hover transition">
+                                        <span class="text-3xl group-hover:scale-125 transition-transform">😤</span>
+                                        <span class="text-xs font-black text-amber-700 font-cute">Cáu Gắt</span>
+                                        <span class="text-[10px] text-amber-600 font-semibold">Sấm chớp</span>
+                                    </button>
+                                    <!-- 4. Tủi thân (Mặc định chọn) -->
+                                    <button type="button" onclick="selectMood('Mưa Dông', '😭', 'Cực kỳ nhạy cảm / Tủi thân', this)" class="mood-opt mood-opt-active group p-3 rounded-[22px] bg-rose-50 hover:bg-rose-100 border-2 border-rose-300 flex flex-col items-center space-y-1 bounce-hover transition">
+                                        <span class="text-3xl group-hover:scale-125 transition-transform">😭</span>
+                                        <span class="text-xs font-black text-rose-600 font-cute">Tủi Thân</span>
+                                        <span class="text-[10px] text-rose-500 font-semibold">Mưa dông</span>
+                                    </button>
+                                    <!-- 5. Lo âu -->
+                                    <button type="button" onclick="selectMood('Mây U Ám', '😰', 'Lo âu, bất an về thai kỳ', this)" class="mood-opt group p-3 rounded-[22px] bg-lavender-50 hover:bg-lavender-100 border-2 border-lavender-300 flex flex-col items-center space-y-1 bounce-hover transition">
+                                        <span class="text-3xl group-hover:scale-125 transition-transform">😰</span>
+                                        <span class="text-xs font-black text-lavender-700 font-cute">Lo Âu</span>
+                                        <span class="text-[10px] text-lavender-600 font-semibold">Mây u ám</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 2. Symptoms Chips Selector -->
+                            <div class="space-y-2 pt-2 border-t border-mama-100">
+                                <label class="text-xs font-black font-cute text-slate-700 uppercase tracking-wider flex items-center justify-between">
+                                    <span>2. Triệu chứng cơ thể hôm nay:</span>
+                                    <span class="text-[10px] font-bold text-mama-600 bg-mama-50 px-2 py-0.5 rounded-full">(Chọn nhiều mục)</span>
+                                </label>
+                                <div id="symptomsContainer" class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="toggleSymptom('Ốm nghén / Buồn nôn', this)" class="symptom-chip px-3 py-1.5 rounded-full text-xs font-bold bg-rose-50 text-slate-700 border border-rose-200 hover:bg-rose-100 transition">
+                                        🤢 Ốm nghén / Buồn nôn
+                                    </button>
+                                    <button type="button" onclick="toggleSymptom('Đau thắt lưng', this)" class="symptom-chip px-3 py-1.5 rounded-full text-xs font-bold bg-rose-50 text-slate-700 border border-rose-200 hover:bg-rose-100 transition symptom-chip-active">
+                                        ⚡ Đau thắt lưng
+                                    </button>
+                                    <button type="button" onclick="toggleSymptom('Chuột rút bắp chân', this)" class="symptom-chip px-3 py-1.5 rounded-full text-xs font-bold bg-rose-50 text-slate-700 border border-rose-200 hover:bg-rose-100 transition">
+                                        🦵 Chuột rút
+                                    </button>
+                                    <button type="button" onclick="toggleSymptom('Sưng phù bàn chân', this)" class="symptom-chip px-3 py-1.5 rounded-full text-xs font-bold bg-rose-50 text-slate-700 border border-rose-200 hover:bg-rose-100 transition">
+                                        🦶 Sưng phù chân
+                                    </button>
+                                    <button type="button" onclick="toggleSymptom('Ợ nóng / Trào ngược', this)" class="symptom-chip px-3 py-1.5 rounded-full text-xs font-bold bg-rose-50 text-slate-700 border border-rose-200 hover:bg-rose-100 transition">
+                                        🌋 Ợ nóng / Trào ngược
+                                    </button>
+                                    <button type="button" onclick="toggleSymptom('Khó ngủ / Mất ngủ', this)" class="symptom-chip px-3 py-1.5 rounded-full text-xs font-bold bg-rose-50 text-slate-700 border border-rose-200 hover:bg-rose-100 transition symptom-chip-active">
+                                        🥱 Mất ngủ
+                                    </button>
+                                    <button type="button" onclick="toggleSymptom('Mệt mỏi kiệt sức', this)" class="symptom-chip px-3 py-1.5 rounded-full text-xs font-bold bg-rose-50 text-slate-700 border border-rose-200 hover:bg-rose-100 transition">
+                                        😴 Mệt mỏi
+                                    </button>
+                                    <button type="button" onclick="toggleSymptom('Táo bón thai kỳ', this)" class="symptom-chip px-3 py-1.5 rounded-full text-xs font-bold bg-rose-50 text-slate-700 border border-rose-200 hover:bg-rose-100 transition">
+                                        🤰 Táo bón
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 3. Physical Activity Tracker -->
+                            <div class="space-y-3 pt-2 border-t border-mama-100">
+                                <label class="text-xs font-black font-cute text-slate-700 uppercase tracking-wider block">3. Vận động & Giải tỏa thể chất:</label>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div class="flex items-center space-x-2">
+                                        <select id="activityTypeSelect" onchange="updateActivityState()" class="w-full text-xs font-bold border-2 border-mama-100 rounded-2xl p-2.5 bg-mama-50/50 text-slate-700 font-cute focus:border-mama-400">
+                                            <option value="Đi dạo nhẹ nhàng 🚶‍♀️">🚶‍♀️ Đi dạo nhẹ nhàng</option>
+                                            <option value="Yoga thai kỳ 🧘‍♀️">🧘‍♀️ Yoga thai kỳ</option>
+                                            <option value="Bài tập hít thở 🌬️">🌬️ Tập thở & Thiền</option>
+                                            <option value="Giãn cơ mông hông 🤸‍♀️">🤸‍♀️ Giãn cơ mông hông</option>
+                                            <option value="Đi bơi thư giãn 🏊‍♀️">🏊‍♀️ Đi bơi thư giãn</option>
+                                            <option value="Nghỉ ngơi hoàn toàn 🛋️">🛋️ Nghỉ ngơi hoàn toàn</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <input id="activityDurationInput" type="number" value="20" min="0" max="180" onchange="updateActivityState()" class="w-24 text-xs font-bold border-2 border-mama-100 rounded-2xl p-2.5 bg-mama-50/50 text-center font-cute focus:border-mama-400">
+                                        <span class="text-xs font-extrabold text-slate-500 font-cute">phút</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. Journaling: Nhật ký biết ơn / Xả stress (Gõ hoặc Thu âm) -->
+                            <div class="space-y-3 pt-2 border-t border-mama-100">
+                                <div class="flex justify-between items-center">
+                                    <label class="text-xs sm:text-sm font-black font-cute text-slate-700 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-pen-nib text-mama-400"></i>
+                                        <span>4. Nhật ký biết ơn & Xả stress (Journaling):</span>
+                                    </label>
+                                    <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">🔒 Ẩn danh / Riêng tư</span>
+                                </div>
+
+                                <div class="relative">
+                                    <textarea id="journalInput" rows="3" class="w-full rounded-[24px] border-2 border-mama-100 p-4 text-xs sm:text-sm font-semibold focus:border-mama-400 focus:ring-2 focus:ring-mama-200 bg-mama-50/30 text-slate-700 placeholder-slate-300 transition" placeholder="Viết ra những suy nghĩ ẩn sâu, điều mẹ biết ơn hoặc nỗi niềm hôm nay... (Có thể bấm micro thu âm)"></textarea>
+                                    
+                                    <!-- Mic & Waveform Indicator -->
+                                    <div class="absolute right-3 bottom-3 flex items-center space-x-2">
+                                        <div id="recordingWave" class="hidden items-center space-x-1 px-2 py-1 bg-rose-50 rounded-full border border-rose-200">
+                                            <div class="w-1 bg-rose-500 sound-wave-bar rounded-full"></div>
+                                            <div class="w-1 bg-rose-500 sound-wave-bar rounded-full"></div>
+                                            <div class="w-1 bg-rose-500 sound-wave-bar rounded-full"></div>
+                                            <div class="w-1 bg-rose-500 sound-wave-bar rounded-full"></div>
+                                            <span class="text-[10px] text-rose-600 font-extrabold font-cute ml-1">Đang nghe...</span>
+                                        </div>
+
+                                        <button type="button" onclick="toggleVoiceInput()" id="micBtn" title="Bấm để thu âm giọng nói" class="p-2.5 text-slate-400 hover:text-mama-500 bg-white rounded-full border border-slate-200 shadow-sm transition bounce-hover">
+                                            <i class="fa-solid fa-microphone text-base"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between pt-1">
+                                    <span class="text-[11px] text-slate-400 font-semibold italic">
+                                        💡 Gợi ý: "Hôm nay điều gì làm mẹ mỉm cười hoặc cảm thấy được yêu thương?"
+                                    </span>
+                                    <button type="button" onclick="saveMoodEntry()" class="px-6 py-3 bg-gradient-to-r from-mama-400 via-rose-400 to-mama-500 hover:from-mama-500 hover:to-rose-500 text-white font-black font-cute rounded-2xl transition shadow-cute border-2 border-white text-xs sm:text-sm bounce-click flex items-center space-x-2">
+                                        <span>💖</span>
+                                        <span>Lưu & Đồng Bộ Sang Bố Bỉm</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- RIGHT COLUMN: Health Biometrics & Psychological Dashboard -->
+                    <div class="space-y-6">
+
+                        <!-- CARD 2: Cân Nặng & Nhiệt Độ -->
+                        <div class="bg-white rounded-[32px] p-6 shadow-cloud border-4 border-butter-200 space-y-4">
+                            <h3 class="font-black font-cute text-slate-800 text-base flex items-center gap-2">
+                                <span>⚖️</span>
+                                <span>Chỉ Số Thể Chất Hôm Nay</span>
+                            </h3>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <!-- Weight Tracker -->
+                                <div class="p-3.5 bg-butter-50 rounded-[22px] border-2 border-butter-200 space-y-1">
+                                    <span class="text-[10px] font-black font-cute text-amber-700 uppercase tracking-wide block">Cân nặng (kg)</span>
+                                    <div class="flex items-center space-x-1">
+                                        <input id="weightInput" type="number" step="0.1" value="58.5" onchange="updateWeightState(this.value)" class="w-16 text-lg font-black font-cute text-slate-800 bg-transparent border-b-2 border-amber-400 focus:outline-none text-center">
+                                        <span class="text-xs font-bold text-slate-500">kg</span>
+                                    </div>
+                                    <p class="text-[10px] font-semibold text-amber-800 mt-1">↑ +0.3kg tuần này</p>
+                                </div>
+
+                                <!-- Basal Temp Tracker -->
+                                <div class="p-3.5 bg-rose-50 rounded-[22px] border-2 border-rose-200 space-y-1">
+                                    <span class="text-[10px] font-black font-cute text-rose-700 uppercase tracking-wide block">Nhiệt độ (°C)</span>
+                                    <div class="flex items-center space-x-1">
+                                        <input id="tempInput" type="number" step="0.1" value="36.8" onchange="updateTempState(this.value)" class="w-16 text-lg font-black font-cute text-slate-800 bg-transparent border-b-2 border-rose-400 focus:outline-none text-center">
+                                        <span class="text-xs font-bold text-slate-500">°C</span>
+                                    </div>
+                                    <p class="text-[10px] font-semibold text-rose-800 mt-1">Nhiệt độ ổn định ✨</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CARD 3: Theo Dõi Uống Nước Đủ 8 Ly -->
+                        <div class="bg-white rounded-[32px] p-6 shadow-cloud border-4 border-baby-100 space-y-4">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-black font-cute text-slate-800 text-base flex items-center gap-2">
+                                    <span>💧</span>
+                                    <span>Nhắc Uống Nước Đủ</span>
+                                </h3>
+                                <span id="waterProgressText" class="text-xs font-black font-cute px-3 py-1 bg-baby-100 text-baby-700 rounded-full border border-baby-200">5 / 8 Ly (1250ml)</span>
+                            </div>
+
+                            <!-- Visual Water Cups Bar -->
+                            <div id="waterCupsContainer" class="flex justify-between items-center bg-baby-50/80 p-3 rounded-[20px] border-2 border-baby-100">
+                                <!-- Dynamic Cups rendered via JS -->
+                            </div>
+
+                            <!-- Plus / Minus Water Controls -->
+                            <div class="flex items-center justify-between space-x-2">
+                                <button type="button" onclick="changeWater(-1)" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black font-cute rounded-xl text-xs transition bounce-click">
+                                    - 1 Ly (250ml)
+                                </button>
+                                <button type="button" onclick="changeWater(1)" class="flex-1 py-2 bg-baby-500 hover:bg-baby-600 text-white font-black font-cute rounded-xl text-xs transition shadow-sm bounce-click">
+                                    + 1 Ly (250ml) 🥛
+                                </button>
+                            </div>
+
+                            <!-- Water Interval Settings -->
+                            <div class="pt-2 border-t border-baby-100 flex items-center justify-between text-xs">
+                                <span class="font-bold text-slate-500">Hẹn giờ nhắc:</span>
+                                <select id="waterIntervalSelect" onchange="updateWaterReminder(this.value)" class="text-xs font-bold border border-baby-200 rounded-lg p-1 bg-white font-cute text-baby-700">
+                                    <option value="1">1 Tiếng / Lần</option>
+                                    <option value="2" selected>2 Tiếng / Lần</option>
+                                    <option value="off">Tắt nhắc</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- CARD 4: BÁO CÁO TÂM LÝ (DASHBOARD) BIỂU ĐỒ TUẦN / THÁNG -->
+                        <div class="bg-white rounded-[32px] p-6 shadow-cloud border-4 border-mama-100 space-y-4">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="font-black font-cute text-slate-800 flex items-center gap-1.5">
+                                        <span>Báo Cáo Tâm Lý</span>
+                                        <span>📊</span>
+                                    </h3>
+                                    <p class="text-[11px] text-slate-400 font-semibold">Xu hướng cảm xúc mẹ bầu</p>
+                                </div>
+                                <!-- Tab Tuần / Tháng -->
+                                <div class="flex bg-mama-50 p-1 rounded-xl border border-mama-200 text-xs font-bold font-cute">
+                                    <button type="button" onclick="toggleMoodChartPeriod('week')" id="chartPeriod-week" class="px-2.5 py-1 rounded-lg bg-white text-mama-600 shadow-sm">Tuần</button>
+                                    <button type="button" onclick="toggleMoodChartPeriod('month')" id="chartPeriod-month" class="px-2.5 py-1 rounded-lg text-slate-500 hover:text-slate-800">Tháng</button>
+                                </div>
+                            </div>
+
+                            <!-- Mood Trend Status Badge -->
+                            <div id="moodTrendStatus" class="p-3 bg-gradient-to-r from-rose-50 to-amber-50 rounded-2xl border border-rose-200 flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-lg">📉</span>
+                                    <div>
+                                        <p class="text-xs font-black font-cute text-rose-600">Tâm trạng đang có dấu hiệu đi xuống</p>
+                                        <p class="text-[10px] text-slate-500">Mẹ dễ xúc động & tủi thân hơn vào buổi tối</p>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] font-black px-2 py-0.5 bg-rose-100 text-rose-700 rounded-full font-cute">Cần quan tâm</span>
+                            </div>
+
+                            <div class="h-40 w-full">
+                                <canvas id="moodChart"></canvas>
+                            </div>
+
+                            <div class="p-3 bg-mint-50 rounded-2xl border border-mint-200 text-xs font-bold text-mint-800 flex items-start space-x-2">
+                                <span class="text-base">💡</span>
+                                <div>
+                                    <strong class="font-cute">Lời nhắn MamaCare:</strong> Mẹ ơi, những ngày hormone biến động là hoàn toàn tự nhiên. Đừng giấu một mình nhé!
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- ========================================================================= -->
+            <!-- MODULE 1.2: TRỢ LÝ AI TÂM GIAO (MAMA AI EMOTIONAL COMPANION & RED FLAG) -->
+            <!-- ========================================================================= -->
+            <div id="momSubSection-ai" class="hidden space-y-6">
+                <div class="bg-white rounded-[32px] p-6 shadow-cloud border-4 border-mama-100 flex flex-col h-[640px] relative overflow-hidden">
+                    <!-- Chat Header -->
+                    <div class="pb-4 border-b-2 border-mama-100 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-mama-300 to-rose-400 text-white flex items-center justify-center font-bold shadow-cute border-2 border-white">
+                                <span class="text-2xl">🎀</span>
+                            </div>
+                            <div>
+                                <h3 class="font-black font-cute text-slate-800 text-lg flex items-center gap-2">
+                                    <span>Trợ Lý Tâm Giao MamaAI</span>
+                                    <span class="text-xs px-2.5 py-0.5 bg-mint-100 text-mint-700 font-black rounded-full border border-mint-200">Online 24/7</span>
+                                </h3>
+                                <p class="text-xs text-mint-600 font-bold flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-mint-400 animate-ping"></span>
+                                    Ẩn danh tuyệt đối • Đồng cảm • Tuyệt đối không phán xét 💖
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Red-flag Status Indicator -->
+                        <div class="flex items-center space-x-2">
+                            <span class="hidden sm:inline-block text-xs font-bold bg-rose-50 text-rose-600 px-3 py-1.5 rounded-full border border-rose-200">
+                                🚨 Hệ Thống Cảnh Báo Đỏ SOS Đang Bật
+                            </span>
+                            <button type="button" onclick="openSosModal()" class="px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-full text-xs font-black font-cute shadow-sm bounce-click flex items-center gap-1">
+                                <span>SOS</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Chat Messages Scroll Container -->
+                    <div id="chatContainer" class="flex-grow overflow-y-auto py-4 space-y-4 px-2">
+                        <!-- AI Welcome Message -->
+                        <div class="flex items-start space-x-3">
+                            <div class="w-9 h-9 rounded-2xl bg-mama-100 text-mama-600 flex items-center justify-center shrink-0 border border-mama-200 font-bold shadow-sm">
+                                <span>👶</span>
+                            </div>
+                            <div class="bg-gradient-to-r from-mama-50 to-rose-50 rounded-[24px] rounded-tl-sm p-4 text-xs sm:text-sm font-semibold text-slate-700 max-w-lg border-2 border-mama-100 leading-relaxed shadow-sm">
+                                Chào mẹ bầu xinh đẹp! Mình là MamaAI. Mình ở đây 24/7 để lắng nghe mọi điều thầm kín, những mệt mỏi hay nỗi niềm khó nói nhất của mẹ mà không phán xét. Mẹ cứ thả lỏng và tâm sự với mình nhé! 🌸❤️
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Suggestions Prompts -->
+                    <div class="py-2 flex overflow-x-auto space-x-2 no-scrollbar border-t border-mama-50">
+                        <button type="button" onclick="sendQuickChat('Hôm nay mình thấy đau lưng và kiệt sức quá...')" class="text-[11px] font-bold px-3 py-1 bg-mama-50 hover:bg-mama-100 text-mama-700 rounded-full border border-mama-200 whitespace-nowrap">
+                            💬 Đau lưng & mệt mỏi
+                        </button>
+                        <button type="button" onclick="sendQuickChat('Chồng mình vô tâm quá, chẳng hiểu cho sự thay đổi của mình...')" class="text-[11px] font-bold px-3 py-1 bg-lavender-50 hover:bg-lavender-100 text-lavender-700 rounded-full border border-lavender-200 whitespace-nowrap">
+                            💬 Tủi thân vì chồng
+                        </button>
+                        <button type="button" onclick="sendQuickChat('Mình lo lắng sợ sau này sinh con không biết chăm...')" class="text-[11px] font-bold px-3 py-1 bg-butter-50 hover:bg-butter-100 text-amber-800 rounded-full border border-butter-200 whitespace-nowrap">
+                            💬 Lo lắng sợ sinh nở
+                        </button>
+                        <button type="button" onclick="sendQuickChat('Mình cảm thấy tuyệt vọng và kiệt sức hoàn toàn...')" class="text-[11px] font-bold px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-full border border-rose-200 whitespace-nowrap">
+                            🚨 Thử test từ khóa SOS
+                        </button>
+                    </div>
+
+                    <!-- Chat Input Box -->
+                    <div class="pt-2 border-t-2 border-mama-100">
+                        <form onsubmit="handleAiChat(event)" class="flex items-center space-x-2">
+                            <input id="aiInput" type="text" placeholder="Nhập tâm sự cùng MamaAI (ví dụ: 'Mình bị mất ngủ và thấy tủi thân...')" class="flex-grow rounded-full border-2 border-mama-100 px-5 py-3 text-xs sm:text-sm font-semibold focus:border-mama-400 focus:ring-2 focus:ring-mama-200 bg-mama-50/20 text-slate-700 placeholder-slate-300">
+                            <button type="submit" class="px-6 py-3 bg-gradient-to-r from-mama-400 to-rose-500 hover:from-mama-500 hover:to-rose-600 text-white rounded-full font-black font-cute transition shadow-cute border-2 border-white text-xs sm:text-sm flex items-center space-x-2 bounce-click">
+                                <span>Gửi</span>
+                                <i class="fa-solid fa-paper-plane text-xs"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- ========================================================================= -->
+            <!-- MODULE 1.3: KHÔNG GIAN "THỞ" (ZEN SPACE & CONTENT LIBRARY) -->
+            <!-- ========================================================================= -->
+            <div id="momSubSection-zen" class="hidden space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    <!-- 1. Bài Tập Hít Thở Giảm Hoảng Loạn (Panic Attack) -->
+                    <div class="bg-gradient-to-br from-teal-900 via-slate-900 to-emerald-950 text-white rounded-[32px] p-8 shadow-cloud flex flex-col items-center justify-between relative overflow-hidden min-h-[440px] border-4 border-mint-500/30">
+                        <div class="text-center z-10 space-y-2">
+                            <span class="text-xs font-black uppercase tracking-widest text-mint-300 bg-mint-950/80 px-3.5 py-1 rounded-full border border-mint-500/40 font-cute">🌿 Xoa Dịu Cơn Hoảng Loạn</span>
+                            <h3 class="text-2xl font-black font-cute text-butter-100">Bài Tập Thở Sâu 4-7-8</h3>
+                            <p id="breathInstruction" class="text-xs text-mint-100/90 font-semibold max-w-xs mx-auto">
+                                Giúp ổn định nhịp tim, giảm bớt cơn hoảng loạn và âu lo tức thì
+                            </p>
+                        </div>
+
+                        <!-- Breathing Ring Widget -->
+                        <div class="my-6 relative flex items-center justify-center">
+                            <div id="breatheRing" class="w-44 h-44 rounded-full bg-mint-400/20 border-2 border-mint-300/40 flex items-center justify-center transition-all duration-1000">
+                                <div class="w-32 h-32 rounded-full bg-mint-300/30 flex flex-col items-center justify-center border border-white/40 backdrop-blur-sm">
+                                    <span id="breathPhaseText" class="text-[11px] font-black uppercase tracking-wider text-mint-200 font-cute">Sẵn sàng</span>
+                                    <span id="breathTimer" class="text-3xl font-black font-cute text-white">4s</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" onclick="toggleBreathingExercise()" id="breathBtn" class="z-10 px-8 py-3.5 bg-gradient-to-r from-butter-200 to-mint-300 hover:from-butter-300 hover:to-mint-400 text-slate-900 font-black font-cute rounded-full transition shadow-lg text-sm bounce-click">
+                            🍃 Bắt Đầu Nhịp Thở Zen
+                        </button>
+                    </div>
+
+                    <!-- 2. Kho Âm Thanh Thư Giãn (Web Audio API Synthesizer tích hợp thực tế) -->
+                    <div class="bg-white rounded-[32px] p-6 shadow-cloud border-4 border-lavender-100 space-y-4 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <h3 class="font-black font-cute text-slate-800 text-base flex items-center gap-2">
+                                    <span>Âm Thanh Sóng Não & Thai Giáo</span>
+                                    <span>🎧</span>
+                                </h3>
+                                <span class="text-[10px] font-black px-2 py-0.5 bg-lavender-100 text-lavender-700 rounded-full">Audio Thực</span>
+                            </div>
+                            <p class="text-xs text-slate-400 font-semibold">Tần số sóng não giúp xoa dịu thần kinh, dễ ngủ sâu</p>
+                        </div>
+
+                        <div class="space-y-2.5">
+                            <!-- Track 1: 432Hz -->
+                            <div onclick="playAudioSynthesizer('Sóng Não Theta 432Hz - Xoa Dịu Lo Âu & Dễ Ngủ', 432, 'binaural')" class="audio-card p-3 rounded-[20px] bg-lavender-50/70 hover:bg-lavender-100 border-2 border-lavender-200 cursor-pointer flex items-center justify-between transition bounce-hover">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-2xl bg-lavender-200 text-lavender-700 flex items-center justify-center text-lg shadow-sm">
+                                        🎵
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-black text-slate-800 font-cute">Sóng Não Theta 432Hz</p>
+                                        <p class="text-[11px] font-semibold text-slate-500">Giúp xoa dịu giấc ngủ sâu</p>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-circle-play text-lavender-500 text-2xl hover:scale-110 transition"></i>
+                            </div>
+
+                            <!-- Track 2: 528Hz -->
+                            <div onclick="playAudioSynthesizer('Tần Số Phục Hồi Năng Lượng 528Hz Miracle Tone', 528, 'binaural')" class="audio-card p-3 rounded-[20px] bg-mint-50/70 hover:bg-mint-100 border-2 border-mint-200 cursor-pointer flex items-center justify-between transition bounce-hover">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-2xl bg-mint-200 text-mint-700 flex items-center justify-center text-lg shadow-sm">
+                                        ✨
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-black text-slate-800 font-cute">Tần Số 528Hz Miracle</p>
+                                        <p class="text-[11px] font-semibold text-slate-500">Chữa lành & giảm căng thẳng</p>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-circle-play text-mint-500 text-2xl hover:scale-110 transition"></i>
+                            </div>
+
+                            <!-- Track 3: White Noise Mưa Rào -->
+                            <div onclick="playAudioSynthesizer('Tiếng Mưa Rào White Noise Thiên Nhiên', 0, 'rain')" class="audio-card p-3 rounded-[20px] bg-baby-50/70 hover:bg-baby-100 border-2 border-baby-200 cursor-pointer flex items-center justify-between transition bounce-hover">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-2xl bg-baby-200 text-baby-700 flex items-center justify-center text-lg shadow-sm">
+                                        🌧️
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-black text-slate-800 font-cute">Tiếng Mưa Rào White Noise</p>
+                                        <p class="text-[11px] font-semibold text-slate-500">Âm thanh thiên nhiên êm dịu</p>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-circle-play text-baby-500 text-2xl hover:scale-110 transition"></i>
+                            </div>
+
+                            <!-- Track 4: Audio Truyện Kể Thai Giáo -->
+                            <div onclick="playAudioSynthesizer('Audio Truyện Kể Thai Giáo: Chú Voi Con & Khu Rừng Cổ Tích', 320, 'binaural')" class="audio-card p-3 rounded-[20px] bg-butter-50/70 hover:bg-butter-100 border-2 border-butter-200 cursor-pointer flex items-center justify-between transition bounce-hover">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-2xl bg-butter-200 text-amber-700 flex items-center justify-center text-lg shadow-sm">
+                                        📖
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-black text-slate-800 font-cute">Truyện Kể Trước Khi Ngủ</p>
+                                        <p class="text-[11px] font-semibold text-slate-500">Gắn kết tình cảm Mẹ & Bé</p>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-circle-play text-amber-500 text-2xl hover:scale-110 transition"></i>
+                            </div>
+                        </div>
+
+                        <!-- Mini Audio Player Status Widget -->
+                        <div id="audioPlayerWidget" class="hidden p-4 bg-slate-900 text-white rounded-[24px] border-2 border-lavender-400/50 shadow-lg space-y-2">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2 truncate">
+                                    <span class="w-2 h-2 rounded-full bg-mint-400 animate-ping"></span>
+                                    <span id="playingTitle" class="text-xs font-black font-cute truncate">Đang phát nhạc sóng não...</span>
+                                </div>
+                                <button type="button" onclick="stopAudioSynthesizer()" class="text-xs text-rose-300 font-black hover:underline font-cute">Tắt Audio ⏹️</button>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <div class="w-1 bg-mint-400 sound-wave-bar rounded-full"></div>
+                                <div class="w-1 bg-mint-400 sound-wave-bar rounded-full"></div>
+                                <div class="w-1 bg-mint-400 sound-wave-bar rounded-full"></div>
+                                <div class="w-1 bg-mint-400 sound-wave-bar rounded-full"></div>
+                                <div class="w-1 bg-mint-400 sound-wave-bar rounded-full"></div>
+                                <span class="text-[10px] text-slate-400 ml-2">Đang phát tần số thực Web Audio</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Kho Bài Tập Yoga Thai Kỳ Nhẹ Nhàng Tùy Tam Cá Nguyệt -->
+                    <div class="bg-white rounded-[32px] p-6 shadow-cloud border-4 border-mint-100 space-y-4">
+                        <div>
+                            <h3 class="font-black font-cute text-slate-800 text-base flex items-center gap-2">
+                                <span>Yoga Nhẹ Nhàng Thai Kỳ</span>
+                                <span>🧘‍♀️</span>
+                            </h3>
+                            <p class="text-xs text-slate-400 font-semibold">Theo từng tam cá nguyệt an toàn cho mẹ bé</p>
+                        </div>
+                        
+                        <!-- Trimester Filter Tabs -->
+                        <div class="flex space-x-1 bg-mint-50 p-1.5 rounded-2xl text-xs font-bold border border-mint-200">
+                            <button type="button" onclick="filterYoga('t1')" id="yogaBtn-t1" class="flex-1 py-2 font-cute rounded-xl bg-white shadow-sm text-mint-700">3 Tháng Đầu</button>
+                            <button type="button" onclick="filterYoga('t2')" id="yogaBtn-t2" class="flex-1 py-2 font-cute rounded-xl text-slate-500">3 Tháng Giữa</button>
+                            <button type="button" onclick="filterYoga('t3')" id="yogaBtn-t3" class="flex-1 py-2 font-cute rounded-xl text-slate-500">3 Tháng Cuối</button>
+                        </div>
+
+                        <div id="yogaList" class="space-y-3">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- ========================================================================= -->
+            <!-- MODULE 1.4: CỘNG ĐỒNG GÓC KHUẤT (SAFE SPACE FORUM) -->
+            <!-- ========================================================================= -->
+            <div id="momSubSection-forum" class="hidden space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    
+                    <!-- Forum Rooms / Sidebar Filters -->
+                    <div class="bg-white rounded-[32px] p-6 shadow-cloud border-4 border-lavender-100 space-y-3">
+                        <div class="mb-3">
+                            <h3 class="font-black font-cute text-slate-800 text-base flex items-center gap-1.5">
+                                <span>Phòng Trò Chuyện</span>
+                                <span>💬</span>
+                            </h3>
+                            <p class="text-xs text-slate-400 font-semibold">Phân loại theo tâm trạng</p>
+                        </div>
+
+                        <button type="button" onclick="filterForum('all')" id="roomBtn-all" class="w-full text-left px-4 py-3 rounded-2xl text-xs font-black font-cute bg-lavender-100 text-lavender-700 border-2 border-lavender-200 transition">
+                            ✨ Tất Cả Tâm Sự
+                        </button>
+                        <button type="button" onclick="filterForum('angry')" id="roomBtn-angry" class="w-full text-left px-4 py-3 rounded-2xl text-xs font-bold text-slate-600 hover:bg-rose-50 transition">
+                            🔥 Phòng Xả Giận & Mệt Mỏi
+                        </button>
+                        <button type="button" onclick="filterForum('advice')" id="roomBtn-advice" class="w-full text-left px-4 py-3 rounded-2xl text-xs font-bold text-slate-600 hover:bg-baby-50 transition">
+                            🤝 Phòng Tìm Lời Khuyên
+                        </button>
+                        <button type="button" onclick="filterForum('joy')" id="roomBtn-joy" class="w-full text-left px-4 py-3 rounded-2xl text-xs font-bold text-slate-600 hover:bg-butter-50 transition">
+                            ☀️ Phòng Chia Sẻ Niềm Vui
+                        </button>
+
+                        <div class="pt-4 border-t border-lavender-100 text-[11px] text-slate-500 font-semibold space-y-1">
+                            <p class="font-bold text-slate-700 font-cute">Cam kết an toàn:</p>
+                            <p>• 100% Ẩn danh bằng biệt danh ngẫu nhiên</p>
+                            <p>• Tự động kiểm duyệt bài độc hại</p>
+                            <p>• Không sợ người quen đánh giá</p>
+                        </div>
+                    </div>
+
+                    <!-- Forum Feed & Post Input -->
+                    <div class="lg:col-span-3 space-y-6">
+                        <!-- Create Anonymous Post Box -->
+                        <div class="bg-white rounded-[32px] p-6 shadow-cloud border-4 border-mama-100 space-y-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-2xl bg-lavender-100 flex items-center justify-center text-lavender-600 text-lg font-bold border border-lavender-200">
+                                    🕵️‍♀️
+                                </div>
+                                <div>
+                                    <h4 class="text-xs sm:text-sm font-black font-cute text-slate-800">Tâm sự ẩn danh an toàn</h4>
+                                    <p class="text-[11px] text-slate-400 font-semibold">Tự động gắn nickname ngẫu nhiên bảo vệ danh tính của bạn</p>
+                                </div>
+                            </div>
+
+                            <textarea id="forumPostText" rows="3" class="w-full rounded-[22px] border-2 border-mama-100 p-4 text-xs sm:text-sm font-semibold focus:border-mama-400 focus:ring-2 focus:ring-mama-200 bg-mama-50/20 text-slate-700" placeholder="Viết ra chuyện khó nói nhất của bạn (áp lực tài chính, rạn nứt vợ chồng, cảm giác bất an...)..."></textarea>
+                            
+                            <div class="flex flex-wrap justify-between items-center gap-2">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-bold text-slate-500 font-cute">Đăng vào:</span>
+                                    <select id="forumRoomSelect" class="text-xs font-bold border-2 border-mama-100 rounded-xl px-3 py-2 bg-slate-50 font-cute">
+                                        <option value="angry">🔥 Phòng Xả Giận</option>
+                                        <option value="advice">🤝 Phòng Lời Khuyên</option>
+                                        <option value="joy">☀️ Phòng Chia Sẻ Niềm Vui</option>
+                                    </select>
+                                </div>
+
+                                <button type="button" onclick="createNewPost()" class="px-6 py-2.5 bg-gradient-to-r from-mama-400 to-rose-500 hover:from-mama-500 hover:to-rose-600 text-white rounded-full text-xs font-black font-cute transition shadow-cute border-2 border-white bounce-click">
+                                    Đăng Ẩn Danh ✨
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Posts Stream -->
+                        <div id="forumFeed" class="space-y-4">
+                            <!-- Rendered dynamically via JS -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- ========================================================================= -->
+            <!-- MODULE 1.5: NHẮC NHỞ ĐẶT LỊCH KHÁM & LỊCH UỐNG THUỐC -->
+            <!-- ========================================================================= -->
+            <div id="momSubSection-reminders" class="hidden space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <!-- Lịch Uống Thuốc & Vi Chất Hàng Ngày -->
+                    <div class="bg-white rounded-[32px] p-6 shadow-cloud border-4 border-rose-100 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="font-black font-cute text-slate-800 flex items-center space-x-2 text-base">
+                                    <span>💊</span>
+                                    <span>Lịch Uống Thuốc & Vi Chất</span>
+                                </h3>
+                                <p class="text-xs text-slate-400 font-semibold">Đảm bảo đủ dưỡng chất thai kỳ mỗi ngày</p>
+                            </div>
+                            <button type="button" onclick="addMedicationPrompt()" class="text-xs text-mama-600 font-black font-cute hover:underline bg-mama-50 px-3.5 py-1.5 rounded-full border border-mama-200">+ Thêm Thuốc</button>
+                        </div>
+
+                        <!-- Progress Completion Bar -->
+                        <div class="p-3.5 bg-rose-50/70 rounded-2xl border border-rose-200 space-y-1.5">
+                            <div class="flex justify-between text-xs font-black font-cute">
+                                <span class="text-slate-600">Tiến độ uống thuốc hôm nay:</span>
+                                <span id="medProgressPercent" class="text-rose-600">33% (1/3 cữ)</span>
+                            </div>
+                            <div class="w-full h-2.5 bg-white rounded-full overflow-hidden border border-rose-200">
+                                <div id="medProgressBar" class="h-full bg-gradient-to-r from-mama-400 to-rose-500 rounded-full transition-all duration-500" style="width: 33%"></div>
+                            </div>
+                        </div>
+
+                        <div id="medList" class="space-y-3">
+                            <!-- Dynamically generated list -->
+                        </div>
+                    </div>
+
+                    <!-- Lịch Khám Thai Định Kỳ -->
+                    <div class="bg-white rounded-[32px] p-6 shadow-cloud border-4 border-baby-100 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="font-black font-cute text-slate-800 flex items-center space-x-2 text-base">
+                                    <span>🩺</span>
+                                    <span>Lịch Khám Thai Định Kỳ</span>
+                                </h3>
+                                <p class="text-xs text-slate-400 font-semibold">Theo dõi các mốc sàng lọc quan trọng</p>
+                            </div>
+                            <button type="button" onclick="addAppointmentPrompt()" class="text-xs text-baby-700 font-black font-cute hover:underline bg-baby-50 px-3.5 py-1.5 rounded-full border border-baby-200">+ Thêm Mốc Khám</button>
+                        </div>
+
+                        <div id="appointmentList" class="space-y-3">
+                            <!-- Dynamically generated appointments -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- ========================================================================= -->
+        <!-- PHÂN HỆ 2: DÀNH CHO NGƯỜI CHỒNG (PARTNER / SUPPORTER - "VŨ KHÍ BÍ MẬT") -->
+        <!-- ========================================================================= -->
+        <section id="roleSection-husband" class="hidden space-y-6">
+            
+            <!-- Sync Banner for Husband -->
+            <div class="bg-gradient-to-r from-baby-500 via-baby-400 to-indigo-500 text-white rounded-[32px] p-6 sm:p-8 shadow-cloud border-4 border-white flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 relative overflow-hidden">
+                <div class="space-y-1 text-center md:text-left z-10">
+                    <span class="text-xs font-black uppercase tracking-wider text-baby-100 font-cute bg-white/20 px-3 py-1 rounded-full border border-white/30">🧸 Vũ Khí Bí Mật • Trợ Lý Bố Bỉm Tinh Tế</span>
+                    <h2 class="text-2xl sm:text-3xl font-black font-cute">Thời Tiết Cảm Xúc Của Vợ Yêu</h2>
+                    <p class="text-xs text-baby-100 font-semibold">Đồng bộ liên tục tâm trạng, triệu chứng & chỉ dẫn "Cứu Vợ" kịp thời!</p>
+                </div>
+                
+                <div class="flex items-center space-x-3 bg-white/20 backdrop-blur-md px-5 py-3 rounded-2xl border-2 border-white/40 z-10">
+                    <span class="text-2xl">🔗</span>
+                    <div class="text-left">
+                        <p class="text-xs font-extrabold text-white">Đã kết nối với Vợ Yêu</p>
+                        <p class="text-[11px] text-butter-200 font-black font-cute">Mã QR: MAMA-8892-LOVE</p>
+                    </div>
+                    <button type="button" onclick="openQrModal()" class="px-2.5 py-1 bg-white text-baby-700 rounded-lg text-xs font-black font-cute shadow-sm hover:bg-baby-50">Xem QR</button>
+                </div>
+            </div>
+
+            <!-- Sub Nav Husband -->
+            <div class="flex space-x-2 border-b-2 border-baby-100 pb-2">
+                <button type="button" onclick="switchHusbandTab('sync')" id="husTab-sync" class="hus-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-black font-cute bg-baby-500 text-white shadow-cute border-2 border-white bounce-hover">
+                    <i class="fa-solid fa-cloud-sun-rain mr-2"></i>2.1 Đồng Bộ "Thời Tiết Cảm Xúc" & Tip Cứu Vợ ⛅
+                </button>
+                <button type="button" onclick="switchHusbandTab('bootcamp')" id="husTab-bootcamp" class="hus-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-black font-cute text-slate-600 bg-white border-2 border-slate-100 hover:border-baby-200 bounce-hover">
+                    <i class="fa-solid fa-graduation-cap mr-2 text-baby-500"></i>2.2 Lớp Học Làm Ba (Daddy Bootcamp) 🎓
+                </button>
+            </div>
+
+            <!-- MODULE 2.1: ĐỒNG BỘ THỜI TIẾT & SỨC KHỎE (ACTIONABLE TIPS) -->
+            <div id="husSubSection-sync" class="space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Weather & Health Sync Card -->
+                    <div id="husbandWeatherCard" class="bg-gradient-to-br from-rose-50 to-orange-50 border-4 border-rose-200 rounded-[32px] p-6 shadow-cloud flex flex-col justify-between space-y-4">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-black text-rose-500 uppercase tracking-wider bg-rose-100 px-3 py-1 rounded-full border border-rose-200 font-cute">⚡ Realtime Sync</span>
+                                <span class="text-xs text-slate-400 font-semibold" id="lastSyncTime">Cập nhật: 10:30 AM</span>
+                            </div>
+                            
+                            <div class="flex items-center space-x-4 my-2">
+                                <span id="partnerWeatherEmoji" class="text-6xl float-cute">😭</span>
+                                <div>
+                                    <h3 id="partnerWeatherTitle" class="text-2xl font-black font-cute text-slate-800">Mưa Dông</h3>
+                                    <p id="partnerWeatherSub" class="text-xs font-black text-rose-600 font-cute">Vợ đang rất tủi thân & nhạy cảm!</p>
+                                </div>
+                            </div>
+
+                            <!-- Health Quick Stats Badge -->
+                            <div class="grid grid-cols-2 gap-2 bg-white/80 p-3.5 rounded-2xl border border-rose-200 text-xs font-extrabold shadow-sm">
+                                <div>⚖️ Cân nặng: <span id="husbandViewWeight" class="text-mama-600">58.5 kg</span></div>
+                                <div>🌡️ Nhiệt độ: <span id="husbandViewTemp" class="text-rose-600">36.8 °C</span></div>
+                                <div class="col-span-2">💧 Lượng nước: <span id="husbandViewWater" class="text-baby-600">5/8 Ly (1250ml)</span></div>
+                            </div>
+
+                            <!-- Symptoms List Sync -->
+                            <div class="space-y-1">
+                                <p class="text-[11px] font-black font-cute text-slate-500 uppercase">Triệu chứng vợ đang gặp phải:</p>
+                                <div id="husbandSymptomsContainer" class="flex flex-wrap gap-1.5">
+                                    <!-- Rendered dynamically -->
+                                </div>
+                            </div>
+
+                            <!-- Physical Activity Sync -->
+                            <div class="p-2.5 bg-mint-50 rounded-xl border border-mint-200 text-xs font-bold text-mint-800">
+                                🏃‍♀️ Vận động: <span id="husbandViewActivity">Đi dạo nhẹ nhàng (20 phút)</span>
+                            </div>
+
+                            <!-- Journal Snippet from Wife -->
+                            <div class="space-y-1">
+                                <p class="text-[11px] font-black font-cute text-slate-500 uppercase">Trích đoạn nhật ký của vợ:</p>
+                                <p id="partnerJournalSnippet" class="text-xs font-semibold text-slate-600 bg-white/90 p-3.5 rounded-[20px] italic border-2 border-rose-100 shadow-sm">
+                                    "Hôm nay mệt quá mà thấy anh đi làm về muộn..."
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Husband to Wife Cheer-up Box -->
+                        <div class="pt-3 border-t border-rose-200/80">
+                            <button type="button" onclick="husbandSendLoveMsg()" class="w-full py-2.5 bg-gradient-to-r from-rose-500 to-mama-500 hover:from-rose-600 hover:to-mama-600 text-white rounded-xl text-xs font-black font-cute shadow-sm bounce-click flex items-center justify-center space-x-1.5">
+                                <span>💌</span>
+                                <span>Gửi Tin Nhắn Yêu Thương Sang Máy Vợ</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Actionable Tips "Cứu Vợ" -->
+                    <div class="lg:col-span-2 bg-white rounded-[32px] p-6 shadow-cloud border-4 border-baby-100 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="font-black font-cute text-slate-800 flex items-center space-x-2 text-base">
+                                    <span>💡</span>
+                                    <span>Gợi Ý Hành Động "Cứu Vợ" Tinh Tế</span>
+                                </h3>
+                                <p class="text-xs text-slate-400 font-semibold">Hệ thống AI tự động đề xuất dựa trên cảm xúc của vợ</p>
+                            </div>
+                            <span class="text-xs bg-butter-100 text-amber-800 px-3 py-1 rounded-full border border-butter-300 font-bold font-cute">Khuyên dùng ngay</span>
+                        </div>
+
+                        <div id="husbandTipsList" class="space-y-3">
+                            <!-- Dynamically generated tips -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- MODULE 2.2: DADDY BOOTCAMP (LỚP HỌC LÀM BA SIÊU NGẮN <1 PHÚT) -->
+            <div id="husSubSection-bootcamp" class="hidden space-y-6">
+                <div>
+                    <h3 class="text-xl font-black font-cute text-slate-800">Lớp Học Làm Ba Siêu Tốc (Dưới 1 Phút) 🎓</h3>
+                    <p class="text-xs font-semibold text-slate-400">Các bài học ngắn súc tích giúp bố thấu hiểu tâm sinh lý và chăm sóc mẹ bầu 10 điểm!</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <!-- Lesson 1 -->
+                    <div class="bg-white rounded-[32px] p-5 shadow-cloud border-4 border-baby-100 space-y-3 flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <div class="h-36 rounded-[22px] bg-gradient-to-tr from-slate-900 to-indigo-900 flex items-center justify-center text-white relative overflow-hidden border-2 border-baby-200 group cursor-pointer" onclick="openBootcampVideo('hormone')">
+                                <i class="fa-solid fa-play-circle text-5xl text-rose-300 group-hover:scale-125 transition"></i>
+                                <span class="absolute bottom-2 right-2 text-[10px] font-bold bg-black/60 px-2 py-0.5 rounded-md text-white">0:45 min</span>
+                            </div>
+                            <span class="text-[10px] font-black text-baby-700 bg-baby-100 px-2.5 py-1 rounded-full font-cute">Kiến Thức Hormone</span>
+                            <h4 class="font-black font-cute text-slate-800 text-sm">Tại sao vợ lại hay tủi thân đột ngột?</h4>
+                            <p class="text-xs text-slate-500 font-semibold leading-relaxed">Hiểu biến động Progesterone trong 1 phút để thương vợ hơn khi mang thai.</p>
+                        </div>
+                        <button type="button" onclick="openBootcampVideo('hormone')" class="w-full py-2 bg-baby-50 hover:bg-baby-100 text-baby-700 rounded-xl text-xs font-black font-cute border border-baby-200">Học Ngay (45s)</button>
+                    </div>
+
+                    <!-- Lesson 2 -->
+                    <div class="bg-white rounded-[32px] p-5 shadow-cloud border-4 border-rose-100 space-y-3 flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <div class="h-36 rounded-[22px] bg-gradient-to-tr from-slate-900 to-rose-950 flex items-center justify-center text-white relative overflow-hidden border-2 border-rose-200 group cursor-pointer" onclick="openBootcampVideo('massage')">
+                                <i class="fa-solid fa-play-circle text-5xl text-rose-300 group-hover:scale-125 transition"></i>
+                                <span class="absolute bottom-2 right-2 text-[10px] font-bold bg-black/60 px-2 py-0.5 rounded-md text-white">0:58 min</span>
+                            </div>
+                            <span class="text-[10px] font-black text-rose-700 bg-rose-100 px-2.5 py-1 rounded-full font-cute">Kỹ Năng Thực Hành</span>
+                            <h4 class="font-black font-cute text-slate-800 text-sm">Hướng dẫn Massage Lưng Cho Vợ Bầu</h4>
+                            <p class="text-xs text-slate-500 font-semibold leading-relaxed">3 động tác xoa bóp đơn giản xua tan đau mỏi lưng và chuột rút ban đêm.</p>
+                        </div>
+                        <button type="button" onclick="openBootcampVideo('massage')" class="w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-black font-cute border border-rose-200">Học Ngay (58s)</button>
+                    </div>
+
+                    <!-- Lesson 3 -->
+                    <div class="bg-white rounded-[32px] p-5 shadow-cloud border-4 border-butter-200 space-y-3 flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <div class="h-36 rounded-[22px] bg-gradient-to-tr from-slate-900 to-amber-950 flex items-center justify-center text-white relative overflow-hidden border-2 border-butter-200 group cursor-pointer" onclick="openBootcampVideo('speech')">
+                                <i class="fa-solid fa-play-circle text-5xl text-butter-300 group-hover:scale-125 transition"></i>
+                                <span class="absolute bottom-2 right-2 text-[10px] font-bold bg-black/60 px-2 py-0.5 rounded-md text-white">0:50 min</span>
+                            </div>
+                            <span class="text-[10px] font-black text-amber-800 bg-butter-100 px-2.5 py-1 rounded-full font-cute">Giao Tiếp Tinh Tế</span>
+                            <h4 class="font-black font-cute text-slate-800 text-sm">Những câu nói "Cấm Kỵ" với Mẹ Bầu</h4>
+                            <p class="text-xs text-slate-500 font-semibold leading-relaxed">Thay vì bảo "Có thế cũng khóc", hãy ôm nhẹ và nói "Anh luôn ở đây với em".</p>
+                        </div>
+                        <button type="button" onclick="openBootcampVideo('speech')" class="w-full py-2 bg-butter-50 hover:bg-butter-100 text-amber-800 rounded-xl text-xs font-black font-cute border border-butter-300">Học Ngay (50s)</button>
+                    </div>
+
+                    <!-- Lesson 4 -->
+                    <div class="bg-white rounded-[32px] p-5 shadow-cloud border-4 border-mint-100 space-y-3 flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <div class="h-36 rounded-[22px] bg-gradient-to-tr from-slate-900 to-teal-950 flex items-center justify-center text-white relative overflow-hidden border-2 border-mint-200 group cursor-pointer" onclick="openBootcampVideo('bag')">
+                                <i class="fa-solid fa-play-circle text-5xl text-mint-300 group-hover:scale-125 transition"></i>
+                                <span class="absolute bottom-2 right-2 text-[10px] font-bold bg-black/60 px-2 py-0.5 rounded-md text-white">0:55 min</span>
+                            </div>
+                            <span class="text-[10px] font-black text-mint-700 bg-mint-100 px-2.5 py-1 rounded-full font-cute">Chuẩn Bị Đi Sinh</span>
+                            <h4 class="font-black font-cute text-slate-800 text-sm">Checklist Giỏ Đồ Đi Sinh Cho Bố</h4>
+                            <p class="text-xs text-slate-500 font-semibold leading-relaxed">Giấy tờ tùy thân, tã sữa, quần áo sơ sinh và tài chính chuẩn chỉnh.</p>
+                        </div>
+                        <button type="button" onclick="openBootcampVideo('bag')" class="w-full py-2 bg-mint-50 hover:bg-mint-100 text-mint-700 rounded-xl text-xs font-black font-cute border border-mint-200">Học Ngay (55s)</button>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- ========================================================================= -->
+        <!-- PHÂN HỆ 3: DÀNH CHO BAN QUẢN LÝ DỰ ÁN (ADMIN DASHBOARD) -->
+        <!-- ========================================================================= -->
+        <section id="roleSection-admin" class="hidden space-y-6">
+            <div class="bg-slate-900 text-white rounded-[32px] p-6 shadow-cloud flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0 border-4 border-slate-700">
+                <div>
+                    <h2 class="text-2xl font-black font-cute">Ban Quản Lý MamaCare 👑</h2>
+                    <p class="text-xs text-slate-400 font-semibold">Giám sát hệ thống, kiểm duyệt nội dung cộng đồng & doanh thu toàn sàn</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs font-bold bg-mint-500/20 text-mint-300 border border-mint-500/30 px-3 py-1 rounded-full flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-mint-400 animate-ping"></span>
+                        Hệ thống bình thường ✅
+                    </span>
+                </div>
+            </div>
+
+            <!-- Admin Nav -->
+            <div class="flex space-x-2 border-b-2 border-slate-200 pb-2">
+                <button type="button" onclick="switchAdminTab('users')" id="adminTab-users" class="admin-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-black font-cute bg-slate-900 text-white shadow-cute border-2 border-white bounce-hover">
+                    <i class="fa-solid fa-users mr-2"></i>4.1 Quản Lý User & Dữ Liệu
+                </button>
+                <button type="button" onclick="switchAdminTab('moderation')" id="adminTab-moderation" class="admin-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-black font-cute text-slate-600 bg-white border-2 border-slate-100 hover:border-slate-300 bounce-hover">
+                    <i class="fa-solid fa-shield-halved mr-2"></i>4.2 Kiểm Duyệt Nội Dung
+                </button>
+                <button type="button" onclick="switchAdminTab('revenue')" id="adminTab-revenue" class="admin-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-black font-cute text-slate-600 bg-white border-2 border-slate-100 hover:border-slate-300 bounce-hover">
+                    <i class="fa-solid fa-sack-dollar mr-2"></i>4.3 Quản Lý Doanh Thu
+                </button>
+            </div>
+
+            <!-- MODULE 4.1: USER METRICS & DATA -->
+            <div id="adminSubSection-users" class="space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-[24px] border-2 border-slate-100 shadow-sm space-y-1">
+                        <p class="text-xs font-bold text-slate-400">Tổng Mẹ Bầu Đăng Ký</p>
+                        <p class="text-2xl font-black font-cute text-slate-800">12,450</p>
+                        <span class="text-[11px] text-mint-600 font-bold">↑ +15% tháng này</span>
+                    </div>
+                    <div class="bg-white p-5 rounded-[24px] border-2 border-slate-100 shadow-sm space-y-1">
+                        <p class="text-xs font-bold text-slate-400">Tỷ Lệ Active Hàng Ngày (DAU)</p>
+                        <p class="text-2xl font-black font-cute text-slate-800">3,820</p>
+                        <span class="text-[11px] text-mint-600 font-bold">30.6% tổng người dùng</span>
+                    </div>
+                    <div class="bg-white p-5 rounded-[24px] border-2 border-slate-100 shadow-sm space-y-1">
+                        <p class="text-xs font-bold text-slate-400">Tài Khoản Bố Bỉm Đã Link</p>
+                        <p class="text-2xl font-black font-cute text-slate-800">8,190</p>
+                        <span class="text-[11px] text-baby-600 font-bold">65.8% cặp vợ chồng</span>
+                    </div>
+                    <div class="bg-white p-5 rounded-[24px] border-2 border-slate-100 shadow-sm space-y-1">
+                        <p class="text-xs font-bold text-slate-400">Cảnh Báo SOS Khẩn Cấp</p>
+                        <p class="text-2xl font-black font-cute text-rose-600" id="adminSosCount">12</p>
+                        <span class="text-[11px] text-rose-500 font-bold">100% đã can thiệp kịp thời</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-white rounded-[32px] p-6 shadow-cloud border-4 border-slate-100 space-y-3">
+                        <h3 class="font-black font-cute text-slate-800">Thống Kê Tăng Trưởng Người Dùng Mới Theo Tháng</h3>
+                        <div class="h-64 w-full">
+                            <canvas id="userGrowthChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-[32px] p-6 shadow-cloud border-4 border-slate-100 space-y-3">
+                        <h3 class="font-black font-cute text-slate-800">Phân Bổ Cảm Xúc Cộng Đồng</h3>
+                        <div class="h-64 w-full">
+                            <canvas id="communityMoodChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 4.2: CONTENT MODERATION -->
+            <div id="adminSubSection-moderation" class="hidden space-y-6">
+                <div class="bg-white rounded-[32px] p-6 shadow-cloud border-4 border-slate-100 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-black font-cute text-slate-800">Hàng Đợi Kiểm Duyệt Diễn Đàn Góc Khuất</h3>
+                            <p class="text-xs text-slate-400 font-semibold">Tự động phát hiện bài có từ ngữ độc hại, quảng cáo hoặc dấu hiệu SOS</p>
+                        </div>
+                        <span class="text-xs bg-rose-100 text-rose-700 px-3 py-1 rounded-full font-bold font-cute" id="adminFlagCount">2 Cờ Đỏ AI Cảnh Báo</span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs font-semibold">
+                            <thead class="bg-slate-50 text-slate-500 uppercase font-bold">
+                                <tr>
+                                    <th class="p-3">Người đăng</th>
+                                    <th class="p-3">Phòng</th>
+                                    <th class="p-3">Nội dung bài viết</th>
+                                    <th class="p-3">Đánh giá AI</th>
+                                    <th class="p-3">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100" id="adminModTable">
+                                <tr>
+                                    <td class="p-3 font-bold text-rose-600">Mẹ Mây #882</td>
+                                    <td class="p-3 font-cute">Phòng Xả Giận</td>
+                                    <td class="p-3">"Tôi thấy kiệt sức hoàn toàn, chẳng muốn giữ đứa bé này nữa..."</td>
+                                    <td class="p-3"><span class="px-2.5 py-1 bg-rose-100 text-rose-700 rounded-full font-bold font-cute">Rất Cao (SOS Cảnh Báo Đỏ)</span></td>
+                                    <td class="p-3 space-x-2 whitespace-nowrap">
+                                        <button type="button" onclick="adminAction('sos_contact', this)" class="px-3 py-1 bg-rose-600 text-white rounded-lg font-bold">Can Thiệp SOS</button>
+                                        <button type="button" onclick="adminAction('delete', this)" class="px-3 py-1 bg-slate-100 text-slate-700 rounded-lg font-bold">Ẩn Bài</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-bold">Mẹ Cam #102</td>
+                                    <td class="p-3 font-cute">Phòng Lời Khuyên</td>
+                                    <td class="p-3">"Cần mua thuốc giảm cân cấp tốc giá rẻ inbox mình nha link zalo..."</td>
+                                    <td class="p-3"><span class="px-2.5 py-1 bg-amber-100 text-amber-700 rounded-full font-bold font-cute">Spam / Quảng Cáo Lậu</span></td>
+                                    <td class="p-3 space-x-2 whitespace-nowrap">
+                                        <button type="button" onclick="adminAction('approve', this)" class="px-3 py-1 bg-mint-100 text-mint-700 rounded-lg font-bold">Duyệt</button>
+                                        <button type="button" onclick="adminAction('delete', this)" class="px-3 py-1 bg-rose-100 text-rose-700 rounded-lg font-bold">Xóa Bỏ</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 4.3: REVENUE MANAGEMENT -->
+            <div id="adminSubSection-revenue" class="hidden space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-[32px] p-6 shadow-cloud border-4 border-slate-100 space-y-4">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400">Doanh Thu Tháng Này</p>
+                            <p class="text-3xl font-black font-cute text-slate-800 mt-1">185,400,000 VNĐ</p>
+                            <p class="text-xs text-mint-600 font-bold mt-0.5">↑ +22% so với tháng trước</p>
+                        </div>
+                        
+                        <div class="pt-4 border-t border-slate-100 space-y-2.5 text-xs font-semibold">
+                            <div class="flex justify-between items-center p-2 rounded-xl bg-slate-50">
+                                <span class="text-slate-600">Gói MamaCare Premium Mẹ:</span>
+                                <span class="font-black text-rose-600 font-cute">112,000,000 VNĐ (60%)</span>
+                            </div>
+                            <div class="flex justify-between items-center p-2 rounded-xl bg-slate-50">
+                                <span class="text-slate-600">Đặt Lịch Chuyên Gia Tâm Lý:</span>
+                                <span class="font-black text-mint-600 font-cute">73,400,000 VNĐ (40%)</span>
+                            </div>
+                        </div>
+
+                        <button type="button" onclick="alert('Đang tải báo cáo doanh thu tài chính quý...')" class="w-full py-3 bg-slate-900 text-white rounded-2xl font-black font-cute text-xs hover:bg-slate-800 transition">
+                            Xuất Báo Cáo Doanh Thu (Excel / PDF)
+                        </button>
+                    </div>
+
+                    <div class="lg:col-span-2 bg-white rounded-[32px] p-6 shadow-cloud border-4 border-slate-100 space-y-4">
+                        <h3 class="font-black font-cute text-slate-800">Phân Bổ Nguồn Doanh Thu Dịch Vụ</h3>
+                        <div class="h-60 w-full">
+                            <canvas id="revenuePieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ========================================================================= -->
+    <!-- MODAL 1: RED-FLAG SOS WARNING MODAL (HỆ THỐNG CẢNH BÁO ĐỎ) -->
+    <!-- ========================================================================= -->
+    <div id="sosModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-[36px] max-w-md w-full p-6 sm:p-8 text-center space-y-5 border-4 border-rose-500 shadow-2xl relative animate-pulse">
+            <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-3xl flex items-center justify-center mx-auto text-3xl shadow-md">
+                🚨
+            </div>
+            
+            <div>
+                <h3 class="text-2xl font-black font-cute text-rose-600">MamaCare Luôn Bên Mẹ! ❤️</h3>
+                <p class="text-xs font-semibold text-slate-600 mt-2 leading-relaxed">
+                    Hệ thống nhận diện mẹ đang trải qua cảm giác quá tải hoặc tuyệt vọng. Xin mẹ đừng ở một mình lúc này, hãy để các chuyên gia tâm lý và y tế đồng hành cùng mẹ ngay lập tức!
+                </p>
+            </div>
+
+            <div class="bg-rose-50 p-4 rounded-[22px] border-2 border-rose-200 text-left space-y-2.5">
+                <p class="text-[11px] font-black font-cute text-rose-800 uppercase tracking-wide">Đường Dây Nóng Khẩn Cấp Miễn Phí (24/7):</p>
+                <div class="flex items-center justify-between text-xs sm:text-sm font-black text-rose-700">
+                    <span>Tổng đài Quốc gia Bảo vệ Tâm Lý:</span>
+                    <a href="tel:111" class="px-3.5 py-1 bg-rose-600 text-white rounded-full font-cute shadow-sm">Gọi 111</a>
+                </div>
+                <div class="flex items-center justify-between text-xs sm:text-sm font-black text-rose-700">
+                    <span>Hotline Cấp Cứu MamaCare:</span>
+                    <a href="tel:1900636700" class="px-3.5 py-1 bg-rose-600 text-white rounded-full font-cute shadow-sm">1900 636 700</a>
+                </div>
+                <div class="flex items-center justify-between text-xs sm:text-sm font-black text-rose-700">
+                    <span>Cấp Cứu Y Tế Toàn Quốc:</span>
+                    <a href="tel:115" class="px-3.5 py-1 bg-rose-600 text-white rounded-full font-cute shadow-sm">Gọi 115</a>
+                </div>
+            </div>
+
+            <div class="flex space-x-2">
+                <button type="button" onclick="closeSosModal()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black font-cute rounded-full text-xs transition">
+                    Tôi Đã Bình Tĩnh Hơn
+                </button>
+                <a href="tel:111" class="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white font-black font-cute rounded-full text-xs flex items-center justify-center space-x-1 shadow-md transition">
+                    <i class="fa-solid fa-phone mr-1"></i>
+                    <span>Gọi Hỗ Trợ Ngay</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- MODAL 2: QR PAIRING MODAL (LIÊN KẾT TÀI KHOẢN VỢ CHỒNG) -->
+    <!-- ========================================================================= -->
+    <div id="qrModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-[32px] max-w-sm w-full p-6 text-center space-y-4 border-4 border-baby-200 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h3 class="font-black font-cute text-slate-800 text-lg">Mã QR Liên Kết Vợ Chồng</h3>
+                <button type="button" onclick="closeQrModal()" class="text-slate-400 hover:text-slate-700">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="p-6 bg-baby-50 rounded-[24px] border-2 border-baby-200 flex flex-col items-center space-y-2">
+                <!-- QR Code Representation -->
+                <div class="w-44 h-44 bg-white p-3 rounded-2xl shadow-inner border-2 border-baby-300 flex items-center justify-center">
+                    <div class="w-full h-full bg-slate-800 rounded-lg flex flex-col items-center justify-center text-white text-xs font-mono p-2">
+                        <i class="fa-solid fa-qrcode text-6xl text-baby-300 mb-1"></i>
+                        <span class="text-[10px] text-baby-200 font-bold">MAMA-8892-LOVE</span>
+                    </div>
+                </div>
+                <p class="text-xs font-extrabold text-baby-700 font-cute mt-2">Mã bảo mật: MAMA-8892-LOVE</p>
+            </div>
+            <p class="text-xs text-slate-500 font-semibold">Chỉ cần đưa điện thoại của vợ quét mã này để kích hoạt đồng bộ Thời Tiết Cảm Xúc tức thì!</p>
+            <button type="button" onclick="closeQrModal()" class="w-full py-2.5 bg-baby-500 hover:bg-baby-600 text-white font-black font-cute rounded-full text-xs">
+                Đã Hiểu
+            </button>
+        </div>
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- MODAL 3: DADDY BOOTCAMP VIDEO & MINI QUIZ MODAL -->
+    <!-- ========================================================================= -->
+    <div id="bootcampModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-[32px] max-w-lg w-full p-6 space-y-4 border-4 border-baby-300 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <span class="text-xs font-black uppercase tracking-wider text-baby-700 bg-baby-100 px-3 py-1 rounded-full font-cute" id="bootcampBadge">Khóa Học 1 Phút</span>
+                <button type="button" onclick="closeBootcampModal()" class="text-slate-400 hover:text-slate-700">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Simulated Video Player -->
+            <div class="h-48 rounded-[24px] bg-slate-950 flex flex-col items-center justify-center text-white relative overflow-hidden border-2 border-slate-800">
+                <div class="text-center space-y-2 px-4">
+                    <i class="fa-solid fa-circle-play text-4xl text-rose-400 animate-pulse"></i>
+                    <h4 class="text-sm font-black font-cute" id="bootcampVideoTitle">Video Giảng Dạy</h4>
+                    <p class="text-xs text-slate-300" id="bootcampVideoDesc">Thời lượng: 0:45 min • Nội dung trực quan</p>
+                </div>
+                <div class="absolute bottom-2 left-4 right-4 flex items-center space-x-2 text-[10px] text-slate-400">
+                    <span>0:15</span>
+                    <div class="flex-grow h-1 bg-slate-700 rounded-full overflow-hidden">
+                        <div class="w-1/3 h-full bg-rose-500"></div>
+                    </div>
+                    <span>0:45</span>
+                </div>
+            </div>
+
+            <!-- Mini Quiz -->
+            <div class="p-4 bg-baby-50 rounded-2xl border border-baby-200 space-y-2">
+                <p class="text-xs font-black font-cute text-slate-800" id="bootcampQuizQuestion">Câu hỏi củng cố: Khi vợ đột ngột khóc vì tủi thân, bố nên làm gì?</p>
+                <div class="space-y-1 text-xs font-bold text-slate-700" id="bootcampQuizOptions">
+                    <button type="button" onclick="answerBootcampQuiz(true)" class="w-full text-left p-2 bg-white rounded-xl border border-baby-200 hover:bg-baby-100 transition">
+                        A. Ôm nhẹ vợ, pha nước ấm và nói "Anh luôn ở đây với em"
+                    </button>
+                    <button type="button" onclick="answerBootcampQuiz(false)" class="w-full text-left p-2 bg-white rounded-xl border border-baby-200 hover:bg-rose-50 transition">
+                        B. Bảo "Có chuyện gì to tát đâu mà phải khóc"
+                    </button>
+                </div>
+                <p id="bootcampQuizResult" class="hidden text-xs font-black font-cute text-mint-600 mt-1">🎉 Xuất sắc! Bố nhận được huy hiệu Bố Bỉm 10 Điểm!</p>
+            </div>
+
+            <button type="button" onclick="closeBootcampModal()" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-black font-cute rounded-xl text-xs">
+                Hoàn Thành Bài Học
+            </button>
+        </div>
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- JAVASCRIPT APPLICATION LOGIC -->
+    <!-- ========================================================================= -->
+    <script>
+        // Global App State with Full Reactivity Across Portals
+        const state = {
+            currentRole: 'mom',
+            currentMomTab: 'mood',
+            currentHusbandTab: 'sync',
+            currentAdminTab: 'users',
+            
+            // Mom's Active Mood & Health Data
+            momMood: {
+                title: 'Mưa Dông',
+                emoji: '😭',
+                description: 'Cực kỳ nhạy cảm / Tủi thân',
+                symptoms: ['Đau thắt lưng', 'Khó ngủ / Mất ngủ'],
+                activity: {
+                    type: 'Đi dạo nhẹ nhàng 🚶‍♀️',
+                    duration: 20
+                },
+                weight: 58.5,
+                temperature: 36.8,
+                waterCount: 5,
+                waterTarget: 8,
+                waterInterval: '2',
+                journal: 'Hôm nay mệt quá mà thấy anh đi làm về muộn...',
+                time: '10:30 AM'
+            },
+
+            // Web Audio Synth State
+            audioPlaying: false,
+            audioContext: null,
+            oscillatorNodes: [],
+
+            // Breathing exercise state
+            breathingActive: false,
+            breathInterval: null,
+
+            // Initial forum posts
+            posts: [
+                { id: 1, author: 'Mẹ Mây Mùa Thu #302', room: 'angry', text: 'Tối nay chồng đi nhậu về muộn lại còn nồng mùi bia rượu, trong khi mình thì nghén không ngủ được. Bật khóc nấc lên mà ông ấy lăn ra ngủ mất... 😭', likes: 12, time: '20 phút trước', comments: ['Thương mẹ nó quá, nói chuyện thẳng thắn nhé!', 'Chồng mình đợt trước cũng thế, sau mình bảo mẹ chồng góp ý mới đỡ đấy.'] },
+                { id: 2, author: 'Mẹ Bơ Ngọt #109', room: 'advice', text: 'Các mẹ tam cá nguyệt thứ 2 có bị đau phần thắt lưng nhiều không ạ? Có mẹ nào có bài tập massage hay gối bà bầu nào đỡ đau không ạ? 💖', likes: 8, time: '1 giờ trước', comments: ['Dùng gối chữ U nha mẹ nó ơi!', 'Bảo chồng xoa bóp nhẹ bằng dầu tràm ấm cực kỳ hiệu quả ạ.'] },
+                { id: 3, author: 'Mẹ Nấm Nhỏ #554', room: 'joy', text: 'Hôm nay đi siêu âm thai 24 tuần baby đạp chân chào mẹ rạng rỡ lắm. Bác sĩ bảo em bé phát triển rất tốt. Cảm giác hạnh phúc vỡ òa các mẹ ơi! 🥰✨', likes: 35, time: '3 giờ trước', comments: ['Chúc mừng mẹ con nha! Trộm vía em bé! ❤️'] }
+            ],
+
+            // Medications
+            medications: [
+                { id: 1, name: 'Sắt & Axit Folic Hữu Cơ', time: '08:00 AM', taken: true },
+                { id: 2, name: 'Canxi Canxi-D3 Dạng Nước', time: '12:30 PM', taken: false },
+                { id: 3, name: 'DHA Thai Kỳ Chiết Xuất Tảo Biển', time: '20:00 PM', taken: false }
+            ],
+
+            // Appointments
+            appointments: [
+                { id: 1, title: 'Siêu âm 4D Mốc 24 Tuần & Đo Dài Xương', date: '15/10/2026', doctor: 'BS. CKII Nguyễn Thị Lan - BV Từ Dũ', countdown: 'Còn 5 ngày' },
+                { id: 2, title: 'Xét nghiệm Nghiệm pháp Dung nạp Đường', date: '28/10/2026', doctor: 'Khoa Sản - BV Quốc tế Vinmec', countdown: 'Còn 18 ngày' }
+            ],
+
+            // Chart Instances
+            charts: {}
+        };
+
+        // Window Initialization
+        window.onload = function() {
+            initCharts();
+            renderWaterCups();
+            renderMedications();
+            renderAppointments();
+            renderForumPosts('all');
+            renderYogaVideos('t1');
+            updateHusbandSyncUI();
+        };
+
+        // Switch Roles (Mom, Husband, Admin)
+        function switchRole(role) {
+            state.currentRole = role;
+            ['mom', 'husband', 'admin'].forEach(r => {
+                const sec = document.getElementById(`roleSection-${r}`);
+                const btn = document.getElementById(`roleBtn-${r}`);
+                if (r === role) {
+                    sec.classList.remove('hidden');
+                    btn.className = "role-btn px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-black transition-all duration-300 flex items-center space-x-1.5 bg-white text-mama-600 shadow-cute border-2 border-mama-100";
+                } else {
+                    sec.classList.add('hidden');
+                    btn.className = "role-btn px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-extrabold transition-all duration-300 flex items-center space-x-1.5 text-slate-500 hover:text-slate-800";
+                }
+            });
+
+            if (role === 'husband') {
+                document.getElementById('husbandBadgeDot').classList.add('hidden');
+            }
+        }
+
+        // Switch Mom Sub-tabs
+        function switchMomTab(tab) {
+            state.currentMomTab = tab;
+            ['mood', 'ai', 'zen', 'forum', 'reminders'].forEach(t => {
+                const sec = document.getElementById(`momSubSection-${t}`);
+                const btn = document.getElementById(`momTab-${t}`);
+                if (t === tab) {
+                    sec.classList.remove('hidden');
+                    btn.className = "mom-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold font-cute whitespace-nowrap bg-gradient-to-r from-mama-400 to-rose-400 text-white shadow-cute border-2 border-white bounce-hover";
+                } else {
+                    sec.classList.add('hidden');
+                    btn.className = "mom-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold font-cute whitespace-nowrap bg-white text-slate-600 border-2 border-slate-100 hover:border-mama-200 bounce-hover";
+                }
+            });
+        }
+
+        // Switch Husband Sub-tabs
+        function switchHusbandTab(tab) {
+            state.currentHusbandTab = tab;
+            ['sync', 'bootcamp'].forEach(t => {
+                const sec = document.getElementById(`husSubSection-${t}`);
+                const btn = document.getElementById(`husTab-${t}`);
+                if (t === tab) {
+                    sec.classList.remove('hidden');
+                    btn.className = "hus-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-black font-cute bg-baby-500 text-white shadow-cute border-2 border-white bounce-hover";
+                } else {
+                    sec.classList.add('hidden');
+                    btn.className = "hus-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-black font-cute text-slate-600 bg-white border-2 border-slate-100 hover:border-baby-200 bounce-hover";
+                }
+            });
+        }
+
+        // Switch Admin Sub-tabs
+        function switchAdminTab(tab) {
+            state.currentAdminTab = tab;
+            ['users', 'moderation', 'revenue'].forEach(t => {
+                const sec = document.getElementById(`adminSubSection-${t}`);
+                const btn = document.getElementById(`adminTab-${t}`);
+                if (t === tab) {
+                    sec.classList.remove('hidden');
+                    btn.className = "admin-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-black font-cute bg-slate-900 text-white shadow-cute border-2 border-white bounce-hover";
+                } else {
+                    sec.classList.add('hidden');
+                    btn.className = "admin-tab-btn px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-black font-cute text-slate-600 bg-white border-2 border-slate-100 hover:border-slate-300 bounce-hover";
+                }
+            });
+        }
+
+        // Select Mood Option (5 Seconds Check-in)
+        function selectMood(title, emoji, desc, btn) {
+            state.momMood.title = title;
+            state.momMood.emoji = emoji;
+            state.momMood.description = desc;
+
+            // Highlight button
+            const allMoodBtns = document.querySelectorAll('.mood-opt');
+            allMoodBtns.forEach(b => b.classList.remove('mood-opt-active'));
+            if (btn) btn.classList.add('mood-opt-active');
+
+            document.getElementById('selectedMoodNotice').innerText = `Đang chọn: ${emoji} ${title}`;
+
+            // Realtime Sync to Husband
+            updateHusbandSyncUI();
+
+            // Auto push notification if wife is feeling sensitive/angry
+            if (title === 'Mưa Dông' || title === 'Sấm Chớp' || title === 'Mây U Ám' || title === 'Mưa Rào') {
+                triggerSimulatedPush('Cảm xúc nhạy cảm', `${emoji} ${title}`);
+            }
+        }
+
+        // Toggle Symptoms
+        function toggleSymptom(name, btn) {
+            const idx = state.momMood.symptoms.indexOf(name);
+            if (idx > -1) {
+                state.momMood.symptoms.splice(idx, 1);
+                btn.classList.remove('symptom-chip-active');
+            } else {
+                state.momMood.symptoms.push(name);
+                btn.classList.add('symptom-chip-active');
+
+                // Trigger push notification if severe symptom
+                if (name === 'Đau thắt lưng' || name === 'Ốm nghén / Buồn nôn' || name === 'Mệt mỏi kiệt sức') {
+                    triggerSimulatedPush(name, state.momMood.title);
+                }
+            }
+            updateHusbandSyncUI();
+        }
+
+        function updateActivityState() {
+            state.momMood.activity.type = document.getElementById('activityTypeSelect').value;
+            state.momMood.activity.duration = parseInt(document.getElementById('activityDurationInput').value) || 0;
+            updateHusbandSyncUI();
+        }
+
+        function updateWeightState(val) {
+            state.momMood.weight = parseFloat(val) || 0;
+            updateHusbandSyncUI();
+        }
+
+        function updateTempState(val) {
+            state.momMood.temperature = parseFloat(val) || 0;
+            updateHusbandSyncUI();
+        }
+
+        // Water Tracker
+        function renderWaterCups() {
+            const container = document.getElementById('waterCupsContainer');
+            const total = state.momMood.waterTarget;
+            const current = state.momMood.waterCount;
+
+            let html = '';
+            for (let i = 1; i <= total; i++) {
+                if (i <= current) {
+                    html += `<span class="text-xl sm:text-2xl bounce-hover cursor-pointer" onclick="setWater(${i})" title="Đã uống ${i*250}ml">🥛</span>`;
+                } else {
+                    html += `<span class="text-xl sm:text-2xl opacity-30 hover:opacity-60 cursor-pointer" onclick="setWater(${i})" title="Chưa uống">⚪</span>`;
+                }
+            }
+            container.innerHTML = html;
+            document.getElementById('waterProgressText').innerText = `${current} / ${total} Ly (${current * 250}ml)`;
+        }
+
+        function changeWater(delta) {
+            let count = state.momMood.waterCount + delta;
+            if (count < 0) count = 0;
+            if (count > state.momMood.waterTarget) count = state.momMood.waterTarget;
+            state.momMood.waterCount = count;
+            renderWaterCups();
+            updateHusbandSyncUI();
+        }
+
+        function setWater(val) {
+            state.momMood.waterCount = val;
+            renderWaterCups();
+            updateHusbandSyncUI();
+        }
+
+        function updateWaterReminder(val) {
+            state.momMood.waterInterval = val;
+            alert(val === 'off' ? 'Đã tắt nhắc uống nước' : `Đã bật nhắc uống nước mỗi ${val} giờ!`);
+        }
+
+        // Save Mood & Journal Entry
+        async function saveMoodEntry() {
+            const txt = document.getElementById('journalInput').value.trim();
+            if (txt) state.momMood.journal = txt;
+            state.momMood.time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            updateHusbandSyncUI();
+
+            // Đồng bộ Node.js Backend API
+            if (window.MamaApi) {
+                try {
+                    await MamaApi.submitMoodCheckIn({
+                        mood: state.momMood.title,
+                        symptoms: state.momMood.symptoms,
+                        waterCount: state.momMood.waterCount,
+                        journal: state.momMood.journal
+                    });
+                } catch (err) {
+                    console.warn('API Sync fallback:', err);
+                }
+            }
+
+            alert('💖 Đã lưu dữ liệu cảm xúc & sức khỏe thành công! Trạng thái này đã được đồng bộ trực tiếp sang Bố Bỉm (Node.js API).');
+            
+            // Show badge on husband button
+            document.getElementById('husbandBadgeDot').classList.remove('hidden');
+        }
+
+        // Voice Input Recognition for Journaling
+        function toggleVoiceInput() {
+            const micBtn = document.getElementById('micBtn');
+            const wave = document.getElementById('recordingWave');
+            const textarea = document.getElementById('journalInput');
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+            if (SpeechRecognition) {
+                const recognition = new SpeechRecognition();
+                recognition.lang = 'vi-VN';
+                recognition.interimResults = false;
+
+                wave.classList.remove('hidden');
+                wave.classList.add('flex');
+                micBtn.classList.add('text-rose-500', 'animate-pulse');
+
+                recognition.onresult = function(event) {
+                    const transcript = event.results[0][0].transcript;
+                    textarea.value = (textarea.value ? textarea.value + ' ' : '') + transcript;
+                };
+
+                recognition.onerror = function() {
+                    wave.classList.add('hidden');
+                    wave.classList.remove('flex');
+                    micBtn.classList.remove('text-rose-500', 'animate-pulse');
+                    // Fallback demo text
+                    textarea.value = "Tự động thu âm giọng nói: Hôm nay em thấy mỏi thắt lưng nhiều, nhưng ăn ngon miệng và bé đạp đều...";
+                };
+
+                recognition.onend = function() {
+                    wave.classList.add('hidden');
+                    wave.classList.remove('flex');
+                    micBtn.classList.remove('text-rose-500', 'animate-pulse');
+                };
+
+                recognition.start();
+            } else {
+                // Fallback simulation
+                wave.classList.remove('hidden');
+                wave.classList.add('flex');
+                setTimeout(() => {
+                    wave.classList.add('hidden');
+                    wave.classList.remove('flex');
+                    textarea.value = "Ghi âm mẫu: Hôm nay trong người hơi mệt mỏi, mong anh xã về sớm massage lưng và cùng nghe nhạc thai giáo với em...";
+                }, 1500);
+            }
+        }
+
+        // Update Husband Portal UI with Wife's Latest Data
+        function updateHusbandSyncUI() {
+            document.getElementById('partnerWeatherEmoji').innerText = state.momMood.emoji;
+            document.getElementById('partnerWeatherTitle').innerText = state.momMood.title;
+            document.getElementById('partnerWeatherSub').innerText = state.momMood.description;
+            document.getElementById('partnerJournalSnippet').innerText = `"${state.momMood.journal || 'Chưa có ghi chú bổ sung'}"`;
+
+            document.getElementById('husbandViewWeight').innerText = `${state.momMood.weight} kg`;
+            document.getElementById('husbandViewTemp').innerText = `${state.momMood.temperature} °C`;
+            document.getElementById('husbandViewWater').innerText = `${state.momMood.waterCount}/${state.momMood.waterTarget} Ly (${state.momMood.waterCount * 250}ml)`;
+            document.getElementById('husbandViewActivity').innerText = `${state.momMood.activity.type} (${state.momMood.activity.duration} phút)`;
+            document.getElementById('lastSyncTime').innerText = `Cập nhật: ${state.momMood.time || '10:30 AM'}`;
+
+            // Symptoms sync
+            const symptomsContainer = document.getElementById('husbandSymptomsContainer');
+            if (state.momMood.symptoms.length > 0) {
+                symptomsContainer.innerHTML = state.momMood.symptoms.map(s => `
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black font-cute bg-rose-100 text-rose-700 border border-rose-200">⚠️ ${s}</span>
+                `).join('');
+            } else {
+                symptomsContainer.innerHTML = `<span class="text-xs text-mint-600 font-bold">✨ Sức khỏe ổn định, không có triệu chứng khó chịu</span>`;
+            }
+
+            // Generate Actionable Tips for Husband based on wife's state
+            const tipsContainer = document.getElementById('husbandTipsList');
+            let tipsHTML = '';
+
+            if (state.momMood.title === 'Mưa Dông' || state.momMood.symptoms.includes('Đau thắt lưng')) {
+                tipsHTML += `
+                    <div class="p-4 bg-rose-50/90 rounded-[22px] border-2 border-rose-200 flex items-start justify-between space-x-3 shadow-sm">
+                        <div class="space-y-1">
+                            <span class="text-[10px] font-black text-rose-600 uppercase font-cute bg-rose-100 px-2.5 py-0.5 rounded-full">Massage thắt lưng ưu tiên</span>
+                            <h4 class="text-xs sm:text-sm font-black font-cute text-slate-800">Vợ đang bị Quá Tải Cảm Xúc & Đau Lưng 💆‍♀️</h4>
+                            <p class="text-xs text-slate-600 font-semibold leading-relaxed">Vợ bạn hôm nay đang bị quá tải. Lời khuyên: Hãy rủ cô ấy đi dạo, mua món cô ấy thích hoặc chủ động rửa bát tối nay nhé!</p>
+                        </div>
+                        <button type="button" onclick="this.innerText='Đã làm ❤️'; this.disabled=true;" class="px-3.5 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-black font-cute shrink-0 bounce-click shadow-sm">Thực Hiện</button>
+                    </div>
+                `;
+            }
+
+            if (state.momMood.waterCount < 6) {
+                tipsHTML += `
+                    <div class="p-4 bg-baby-50/90 rounded-[22px] border-2 border-baby-200 flex items-start justify-between space-x-3 shadow-sm">
+                        <div class="space-y-1">
+                            <span class="text-[10px] font-black text-baby-700 uppercase font-cute bg-baby-100 px-2.5 py-0.5 rounded-full">Bổ sung nước ấm</span>
+                            <h4 class="text-xs sm:text-sm font-black font-cute text-slate-800">Rót sẵn 1 ly nước ấm mang vào bàn cho vợ 🥛</h4>
+                            <p class="text-xs text-slate-600 font-semibold leading-relaxed">Vợ mới uống ${state.momMood.waterCount*250}ml nước hôm nay. Nhắc vợ uống nước ấm giúp giảm nguy cơ ốm nghén và co thắt dạ con.</p>
+                        </div>
+                        <button type="button" onclick="this.innerText='Đã làm ❤️'; this.disabled=true;" class="px-3.5 py-2 bg-baby-500 hover:bg-baby-600 text-white rounded-xl text-xs font-black font-cute shrink-0 bounce-click shadow-sm">Thực Hiện</button>
+                    </div>
+                `;
+            }
+
+            if (state.momMood.symptoms.includes('Khó ngủ / Mất ngủ')) {
+                tipsHTML += `
+                    <div class="p-4 bg-lavender-50/90 rounded-[22px] border-2 border-lavender-200 flex items-start justify-between space-x-3 shadow-sm">
+                        <div class="space-y-1">
+                            <span class="text-[10px] font-black text-lavender-700 uppercase font-cute bg-lavender-100 px-2.5 py-0.5 rounded-full">Không gian ngủ thư thái</span>
+                            <h4 class="text-xs sm:text-sm font-black font-cute text-slate-800">Bật nhạc sóng não 432Hz & Ngâm chân nước ấm 💤</h4>
+                            <p class="text-xs text-slate-600 font-semibold leading-relaxed">Vợ bị mất ngủ. Hãy pha nước ấm có vài giọt tinh dầu tràm ngâm chân cho vợ và chỉnh nhiệt độ phòng ngủ 25°C.</p>
+                        </div>
+                        <button type="button" onclick="this.innerText='Đã làm ❤️'; this.disabled=true;" class="px-3.5 py-2 bg-lavender-500 hover:bg-lavender-600 text-white rounded-xl text-xs font-black font-cute shrink-0 bounce-click shadow-sm">Thực Hiện</button>
+                    </div>
+                `;
+            }
+
+            if (!tipsHTML) {
+                tipsHTML = `
+                    <div class="p-4 bg-mint-50/90 rounded-[22px] border-2 border-mint-200 flex items-start justify-between space-x-3 shadow-sm">
+                        <div class="space-y-1">
+                            <span class="text-[10px] font-black text-mint-700 uppercase font-cute bg-mint-100 px-2.5 py-0.5 rounded-full">Gắn kết thai giáo</span>
+                            <h4 class="text-xs sm:text-sm font-black font-cute text-slate-800">Đặt tay lên bụng & Đọc truyện cho thai nhi 👶</h4>
+                            <p class="text-xs text-slate-600 font-semibold leading-relaxed">Tâm trạng vợ hôm nay rất tuyệt vời! Hãy dành 15 phút trò chuyện cùng em bé và khen ngợi vợ nhé.</p>
+                        </div>
+                        <button type="button" onclick="this.innerText='Đã làm ❤️'; this.disabled=true;" class="px-3.5 py-2 bg-mint-500 hover:bg-mint-600 text-white rounded-xl text-xs font-black font-cute shrink-0 bounce-click shadow-sm">Thực Hiện</button>
+                    </div>
+                `;
+            }
+
+            tipsContainer.innerHTML = tipsHTML;
+        }
+
+        // Trigger Simulated Push Notification Toast for Husband
+        function triggerSimulatedPush(symptom, mood) {
+            const banner = document.getElementById('pushNotificationBanner');
+            const title = document.getElementById('pushNotifTitle');
+            const body = document.getElementById('pushNotifBody');
+
+            title.innerText = `Vợ bạn hôm nay đang bị quá tải (${mood || 'Cảm xúc nhạy cảm'})!`;
+            body.innerText = `"Vợ bạn hôm nay đang bị quá tải (${symptom}). Lời khuyên: Hãy rủ cô ấy đi dạo, mua món cô ấy thích hoặc chủ động rửa bát tối nay nhé!"`;
+
+            banner.classList.remove('hidden');
+
+            // Auto dismiss after 12s
+            setTimeout(() => {
+                banner.classList.add('hidden');
+            }, 12000);
+        }
+
+        function dismissPushNotif() {
+            document.getElementById('pushNotificationBanner').classList.add('hidden');
+        }
+
+        // Husband Quick Actions from Notification
+        function husbandQuickAction(type) {
+            dismissPushNotif();
+            const momToast = document.getElementById('momResponseToast');
+            const momMsg = document.getElementById('momResponseMsg');
+
+            if (type === 'dish') {
+                momMsg.innerText = "Anh vừa nhận được thông báo của app rồi. Tối nay anh chủ động rửa bát và dọn nhà hết, vợ chỉ việc nghỉ ngơi thôi nhé! ❤️🧼";
+            } else if (type === 'milk_tea') {
+                momMsg.innerText = "Anh đang trên đường về mua món bánh ngọt và đồ ăn vặt vợ thích đây. Đợi anh tí xíu nha vợ yêu! 🧋🍰";
+            } else {
+                momMsg.innerText = "Anh gửi ngàn nụ hôn và cái ôm thật chặt đến hai mẹ con! Anh thương vợ nhiều lắm! ❤️🥰";
+            }
+
+            momToast.classList.remove('hidden');
+            setTimeout(() => {
+                momToast.classList.add('hidden');
+            }, 8000);
+        }
+
+        function husbandSendLoveMsg() {
+            husbandQuickAction('hug');
+            alert('💌 Đã gửi tin nhắn yêu thương sang màn hình của Vợ!');
+        }
+
+        // AI Chat & RED-FLAG CRISIS SYSTEM
+        function sendQuickChat(text) {
+            document.getElementById('aiInput').value = text;
+            handleAiChat(new Event('submit'));
+        }
+
+        async function handleAiChat(e) {
+            e.preventDefault();
+            const input = document.getElementById('aiInput');
+            const userMsg = input.value.trim();
+            if (!userMsg) return;
+
+            const chatContainer = document.getElementById('chatContainer');
+
+            // Render User Message
+            const userBubble = `
+                <div class="flex items-start justify-end space-x-3">
+                    <div class="bg-gradient-to-r from-mama-400 to-rose-400 text-white font-semibold rounded-[24px] rounded-tr-sm p-4 text-xs sm:text-sm max-w-lg shadow-sm border-2 border-white">
+                        ${userMsg}
+                    </div>
+                </div>
+            `;
+            chatContainer.insertAdjacentHTML('beforeend', userBubble);
+            input.value = '';
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // RED-FLAG SYSTEM: Check Danger Crisis Keywords
+            const redFlags = ['tuyệt vọng', 'làm hại bản thân', 'làm hại', 'ghét bỏ đứa trẻ', 'ghét con', 'không muốn sống', 'muốn chết', 'tự tử', 'chết đi cho xong', 'kiệt sức hoàn toàn', 'muốn buông xuôi'];
+            const triggerRedFlag = redFlags.some(kw => userMsg.toLowerCase().includes(kw));
+
+            if (triggerRedFlag) {
+                openSosModal();
+                // Alert husband immediately
+                triggerSimulatedPush('CẢNH BÁO KHẨN CẤP (SOS)', 'Vợ đang trong cơn khủng hoảng tâm lý nghiêm trọng!');
+                // Alert admin count
+                const adminSos = document.getElementById('adminSosCount');
+                if (adminSos) adminSos.innerText = parseInt(adminSos.innerText) + 1;
+            }
+
+            // Gửi dữ liệu tới Node.js AI Engine & Red-flag System
+            if (window.MamaApi) {
+                MamaApi.sendAiChat(userMsg).then(apiRes => {
+                    if (apiRes && apiRes.isRedFlag) {
+                        openSosModal();
+                    }
+                }).catch(e => console.warn('Node.js chat sync:', e));
+            }
+
+            // Show Typing Indicator
+            const typingId = 'typing-' + Date.now();
+            const typingBubble = `
+                <div id="${typingId}" class="flex items-start space-x-3">
+                    <div class="w-9 h-9 rounded-2xl bg-mama-100 text-mama-600 flex items-center justify-center shrink-0 border border-mama-200 shadow-sm font-bold">
+                        <span>🎀</span>
+                    </div>
+                    <div class="bg-mama-50 rounded-[22px] p-3 text-xs text-slate-500 font-bold animate-pulse font-cute border border-mama-100">
+                        MamaAI đang lắng nghe và viết lời an ủi ngọt ngào cho mẹ... ✨
+                    </div>
+                </div>
+            `;
+            chatContainer.insertAdjacentHTML('beforeend', typingBubble);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // Intelligent Empathetic Response Engine for Pregnant Moms
+            setTimeout(() => {
+                document.getElementById(typingId)?.remove();
+
+                let aiReply = "MamaAI ôm mẹ thật chặt nhé! Mang thai là một hành trình kỳ diệu nhưng cũng đầy thử thách. Mẹ hãy cứ thả lỏng, uống một ngụm nước ấm và nghỉ ngơi một chút, mẹ đang làm rất tuyệt vời rồi! ❤️🌸";
+
+                const lower = userMsg.toLowerCase();
+                if (lower.includes('đau lưng') || lower.includes('mệt') || lower.includes('kiệt sức')) {
+                    aiReply = "Thương mẹ quá! Giai đoạn này thai nhi lớn nhanh kéo trọng tâm cơ thể về phía trước khiến cơ lưng bị căng nhiều. Mẹ hãy nằm nghiêng sang trái, kê một chiếc gối dưới bụng và nhờ chồng massage lưng nhẹ nhàng tối nay nhé! 💆‍♀️✨";
+                } else if (lower.includes('chồng') || lower.includes('vô tâm') || lower.includes('tủi thân')) {
+                    aiReply = "MamaAI hiểu cảm giác của mẹ lúc này. Khi mang thai, hormone làm cảm xúc của mẹ nhạy bén hơn gấp nhiều lần. Các ông bố đôi khi hơi chậm hiểu chứ không phải hết thương mẹ đâu. Tối nay mẹ thử chia sẻ nhẹ nhàng những mong muốn của mình với anh nhé, hoặc để MamaCare gửi gợi ý sang cho bố nha! ❤️";
+                } else if (lower.includes('sợ') || lower.includes('sinh con') || lower.includes('đau đẻ')) {
+                    aiReply = "Nỗi sợ sinh nở là tâm lý hoàn toàn bình thường của mọi người mẹ. Cơ thể của mẹ sinh ra đã có khả năng tuyệt vời để sinh em bé. Mẹ hãy vào mục 'Không Gian Thở Zen' luyện tập bài thở 4-7-8 mỗi ngày để giải phóng nỗi sợ nhé! 🧘‍♀️🌿";
+                } else if (triggerRedFlag) {
+                    aiReply = "Mẹ ơi, xin mẹ hãy dừng lại một nhịp thở. Mẹ không hề cô đơn! Hệ thống đã kích hoạt chế độ hỗ trợ SOS. Hãy bấm nút 'Gọi Hỗ Trợ Ngay' để chuyên gia lắng nghe mẹ, hoặc trò chuyện ngay với người thân nhé. Mẹ là báu vật của em bé! ❤️🚨";
+                }
+
+                const aiBubble = `
+                    <div class="flex items-start space-x-3">
+                        <div class="w-9 h-9 rounded-2xl bg-mama-100 text-mama-600 flex items-center justify-center shrink-0 border border-mama-200 font-bold shadow-sm">
+                            <span>🎀</span>
+                        </div>
+                        <div class="bg-gradient-to-r from-mama-50 to-rose-50 rounded-[24px] rounded-tl-sm p-4 text-xs sm:text-sm font-semibold text-slate-700 max-w-lg border-2 border-mama-100 leading-relaxed shadow-sm">
+                            ${aiReply}
+                        </div>
+                    </div>
+                `;
+                chatContainer.insertAdjacentHTML('beforeend', aiBubble);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 1000);
+        }
+
+        // SOS Modal Controls
+        function openSosModal() {
+            document.getElementById('sosModal').classList.remove('hidden');
+        }
+        function closeSosModal() {
+            document.getElementById('sosModal').classList.add('hidden');
+        }
+
+        // QR Modal Controls
+        function openQrModal() {
+            document.getElementById('qrModal').classList.remove('hidden');
+        }
+        function closeQrModal() {
+            document.getElementById('qrModal').classList.add('hidden');
+        }
+
+        // Daddy Bootcamp Video Modal Controls
+        function openBootcampVideo(topic) {
+            const modal = document.getElementById('bootcampModal');
+            const badge = document.getElementById('bootcampBadge');
+            const title = document.getElementById('bootcampVideoTitle');
+            const desc = document.getElementById('bootcampVideoDesc');
+            const quizQ = document.getElementById('bootcampQuizQuestion');
+
+            if (topic === 'hormone') {
+                badge.innerText = "Kiến Thức Hormone";
+                title.innerText = "Giải Mã Hormone Progesterone & Tâm Trạng Của Vợ";
+                desc.innerText = "Thời lượng: 0:45 min • Hiểu vì sao vợ dễ khóc vô cớ";
+                quizQ.innerText = "Khi vợ đột ngột khóc vì tủi thân, bố nên làm gì?";
+            } else if (topic === 'massage') {
+                badge.innerText = "Kỹ Năng Massage";
+                title.innerText = "3 Động Tác Xoa Bóp Thắt Lưng Cho Vợ Bầu";
+                desc.innerText = "Thời lượng: 0:58 min • Giảm đau mỏi tức thì";
+                quizQ.innerText = "Khi massage lưng cho vợ, bố nên dùng lực như thế nào?";
+            } else if (topic === 'speech') {
+                badge.innerText = "Nghệ Thuật Giao Tiếp";
+                title.innerText = "Những Câu Nói Cứu Nguy Cho Bố Bỉm";
+                desc.innerText = "Thời lượng: 0:50 min • Tránh xa những câu nói cấm kỵ";
+                quizQ.innerText = "Câu nói nào sau đây giúp vợ bầu an tâm nhất?";
+            } else {
+                badge.innerText = "Chuẩn Bị Đi Sinh";
+                title.innerText = "Checklist Giỏ Đồ Đi Sinh Chuẩn Chỉnh";
+                desc.innerText = "Thời lượng: 0:55 min • Không lo quên đồ lúc chuyển dạ";
+                quizQ.innerText = "Vật dụng quan trọng nhất bố phải chuẩn bị sẵn là gì?";
+            }
+
+            document.getElementById('bootcampQuizResult').classList.add('hidden');
+            modal.classList.remove('hidden');
+        }
+
+        function closeBootcampModal() {
+            document.getElementById('bootcampModal').classList.add('hidden');
+        }
+
+        function answerBootcampQuiz(isCorrect) {
+            const res = document.getElementById('bootcampQuizResult');
+            if (isCorrect) {
+                res.innerText = "🎉 Chính xác 100%! Bố đã nhận được Huy Hiệu Bố Bỉm Tinh Tế Chuẩn 10 Điểm! 🌟";
+                res.className = "text-xs font-black font-cute text-mint-600 mt-2 block";
+            } else {
+                res.innerText = "⚠️ Chưa đúng rồi bố ơi! Hãy chọn phương án thể hiện sự lắng nghe và yêu thương nhé.";
+                res.className = "text-xs font-black font-cute text-rose-500 mt-2 block";
+            }
+        }
+
+        // Breathing Exercise 4-7-8 Interactive
+        function toggleBreathingExercise() {
+            const btn = document.getElementById('breathBtn');
+            const ring = document.getElementById('breatheRing');
+            const timer = document.getElementById('breathTimer');
+            const phaseText = document.getElementById('breathPhaseText');
+            const instruction = document.getElementById('breathInstruction');
+
+            if (!state.breathingActive) {
+                state.breathingActive = true;
+                btn.innerText = "⏹️ Dừng Bài Tập";
+                ring.classList.add('breathe-circle-cute');
+                
+                let step = 0;
+                instruction.innerText = "Hít vào thật sâu bằng mũi nhẹ nhàng, đưa oxy đến cho bé...";
+                phaseText.innerText = "Hít Vào";
+                timer.innerText = "4s";
+
+                state.breathInterval = setInterval(() => {
+                    step = (step + 1) % 3;
+                    if (step === 0) {
+                        phaseText.innerText = "Hít Vào";
+                        instruction.innerText = "Hít vào thật sâu bằng mũi nhẹ nhàng (4 giây)...";
+                        timer.innerText = "4s";
+                    } else if (step === 1) {
+                        phaseText.innerText = "Nín Thở";
+                        instruction.innerText = "Giữ hơi thở lắng đọng êm ái, thả lỏng vai (7 giây)...";
+                        timer.innerText = "7s";
+                    } else {
+                        phaseText.innerText = "Thở Ra";
+                        instruction.innerText = "Thở ra từ từ bằng miệng xua tan mệt mỏi (8 giây)...";
+                        timer.innerText = "8s";
+                    }
+                }, 4000);
+            } else {
+                state.breathingActive = false;
+                btn.innerText = "🍃 Bắt Đầu Nhịp Thở Zen";
+                ring.classList.remove('breathe-circle-cute');
+                clearInterval(state.breathInterval);
+                instruction.innerText = "Giúp ổn định nhịp tim, giảm bớt cơn hoảng loạn và âu lo tức thì";
+                phaseText.innerText = "Sẵn sàng";
+                timer.innerText = "4s";
+            }
+        }
+
+        // Real Web Audio API Synthesizer (Chơi âm thanh thật trên trình duyệt)
+        function playAudioSynthesizer(title, freq, type) {
+            stopAudioSynthesizer();
+
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                state.audioContext = new AudioContext();
+                state.audioPlaying = true;
+
+                if (type === 'rain') {
+                    // Generate Pink Noise (Rain simulation)
+                    const bufferSize = state.audioContext.sampleRate * 2;
+                    const noiseBuffer = state.audioContext.createBuffer(1, bufferSize, state.audioContext.sampleRate);
+                    const output = noiseBuffer.getChannelData(0);
+                    let b0 = 0, b1 = 0, b2 = 0;
+                    for (let i = 0; i < bufferSize; i++) {
+                        const white = Math.random() * 2 - 1;
+                        b0 = 0.99886 * b0 + white * 0.0555179;
+                        b1 = 0.99332 * b1 + white * 0.0750759;
+                        b2 = 0.96900 * b2 + white * 0.1538520;
+                        output[i] = (b0 + b1 + b2) * 0.12;
+                    }
+                    const whiteNoise = state.audioContext.createBufferSource();
+                    whiteNoise.buffer = noiseBuffer;
+                    whiteNoise.loop = true;
+
+                    const filter = state.audioContext.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 800;
+
+                    const gain = state.audioContext.createGain();
+                    gain.gain.value = 0.35;
+
+                    whiteNoise.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(state.audioContext.destination);
+                    whiteNoise.start();
+                    state.oscillatorNodes.push(whiteNoise);
+                } else {
+                    // Binaural Sine Beats (432Hz or 528Hz calming harmonics)
+                    const osc1 = state.audioContext.createOscillator();
+                    const osc2 = state.audioContext.createOscillator();
+                    const gainNode = state.audioContext.createGain();
+
+                    osc1.type = 'sine';
+                    osc2.type = 'sine';
+
+                    osc1.frequency.value = freq || 432;
+                    osc2.frequency.value = (freq || 432) + 4; // 4Hz delta wave beat
+
+                    gainNode.gain.value = 0.08;
+
+                    osc1.connect(gainNode);
+                    osc2.connect(gainNode);
+                    gainNode.connect(state.audioContext.destination);
+
+                    osc1.start();
+                    osc2.start();
+                    state.oscillatorNodes.push(osc1, osc2);
+                }
+
+                const widget = document.getElementById('audioPlayerWidget');
+                document.getElementById('playingTitle').innerText = `🎶 ${title}`;
+                widget.classList.remove('hidden');
+
+            } catch (err) {
+                console.error("Audio error:", err);
+            }
+        }
+
+        function stopAudioSynthesizer() {
+            state.audioPlaying = false;
+            state.oscillatorNodes.forEach(node => {
+                try { node.stop(); } catch(e) {}
+            });
+            state.oscillatorNodes = [];
+            if (state.audioContext) {
+                try { state.audioContext.close(); } catch(e) {}
+                state.audioContext = null;
+            }
+            document.getElementById('audioPlayerWidget').classList.add('hidden');
+        }
+
+        // Yoga Trimester Filter
+        function filterYoga(trimester) {
+            ['t1', 't2', 't3'].forEach(t => {
+                const btn = document.getElementById(`yogaBtn-${t}`);
+                if (t === trimester) {
+                    btn.className = "flex-1 py-2 font-cute rounded-xl bg-white shadow-sm text-mint-700 border border-mint-200";
+                } else {
+                    btn.className = "flex-1 py-2 font-cute rounded-xl text-slate-500 hover:text-slate-800";
+                }
+            });
+            renderYogaVideos(trimester);
+        }
+
+        function renderYogaVideos(trimester) {
+            const container = document.getElementById('yogaList');
+            let items = [];
+            if (trimester === 't1') {
+                items = [
+                    { title: 'Tư thế Cánh Bướm Mở Hông Nhẹ', duration: '12 min', desc: 'Tăng cường lưu thông máu vùng chậu' },
+                    { title: 'Thiền Chánh Niệm Xua Tan Cơn Ốm Nghén', duration: '08 min', desc: 'Giúp dạ dày lắng đọng, bớt nôn nao' }
+                ];
+            } else if (trimester === 't2') {
+                items = [
+                    { title: 'Tư thế Mèo - Bò Giảm Đau Mỏi Thắt Lưng', duration: '15 min', desc: 'Giải phóng áp lực cột sống thắt lưng' },
+                    { title: 'Bài Tập Giãn Khung Sườn Tăng Oxy Cho Bé', duration: '10 min', desc: 'Mở rộng lồng ngực giúp thở êm ái hơn' }
+                ];
+            } else {
+                items = [
+                    { title: 'Ngồi Xổm Nhẹ (Squat Thai Kỳ) Giúp Sinh Dễ', duration: '14 min', desc: 'Hỗ trợ em bé lọt vào tiểu khung thuận lợi' },
+                    { title: 'Thư Giãn Toàn Thân Savasana Nghiêng Trái', duration: '18 min', desc: 'Nâng niu giấc ngủ cuối thai kỳ' }
+                ];
+            }
+
+            container.innerHTML = items.map(item => `
+                <div class="p-3.5 bg-mint-50/50 rounded-[20px] border-2 border-mint-100 flex items-center justify-between hover:bg-mint-100/60 transition">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-2xl bg-mint-200 text-mint-700 flex items-center justify-center font-bold text-lg shadow-sm">
+                            🧘‍♀️
+                        </div>
+                        <div>
+                            <p class="text-xs font-black font-cute text-slate-800">${item.title}</p>
+                            <p class="text-[11px] font-semibold text-slate-400">${item.desc} • ${item.duration}</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="alert('Bắt đầu bài tập: ${item.title}')" class="px-3.5 py-1.5 bg-mint-500 hover:bg-mint-600 text-white rounded-full text-xs font-black font-cute bounce-click shadow-sm">Tập</button>
+                </div>
+            `).join('');
+        }
+
+        // Forum Logic (Phân loại phòng & Đăng bài ẩn danh)
+        function filterForum(room) {
+            ['all', 'angry', 'advice', 'joy'].forEach(r => {
+                const btn = document.getElementById(`roomBtn-${r}`);
+                if (r === room) {
+                    btn.className = "w-full text-left px-4 py-3 rounded-2xl text-xs font-black font-cute bg-lavender-100 text-lavender-700 border-2 border-lavender-200 transition";
+                } else {
+                    btn.className = "w-full text-left px-4 py-3 rounded-2xl text-xs font-bold text-slate-600 hover:bg-rose-50 transition";
+                }
+            });
+            renderForumPosts(room);
+        }
+
+        function renderForumPosts(room) {
+            const feed = document.getElementById('forumFeed');
+            const filtered = room === 'all' ? state.posts : state.posts.filter(p => p.room === room);
+
+            feed.innerHTML = filtered.map(post => {
+                let badge = '';
+                if (post.room === 'angry') badge = '<span class="px-3 py-1 rounded-full text-[10px] font-black font-cute bg-rose-100 text-rose-600 border border-rose-200">🔥 Phòng Xả Giận</span>';
+                else if (post.room === 'advice') badge = '<span class="px-3 py-1 rounded-full text-[10px] font-black font-cute bg-baby-100 text-baby-700 border border-baby-200">🤝 Phòng Lời Khuyên</span>';
+                else badge = '<span class="px-3 py-1 rounded-full text-[10px] font-black font-cute bg-butter-100 text-amber-700 border border-butter-300">☀️ Phòng Niềm Vui</span>';
+
+                const commentsHTML = post.comments && post.comments.length > 0 ? `
+                    <div class="mt-3 pt-3 border-t border-slate-100 space-y-2">
+                        <p class="text-[11px] font-black font-cute text-slate-500">Bình luận ẩn danh (${post.comments.length}):</p>
+                        ${post.comments.map(c => `
+                            <div class="p-2.5 bg-slate-50 rounded-xl text-xs text-slate-600 flex items-start space-x-2">
+                                <span class="text-mama-400">💬</span>
+                                <span class="leading-relaxed">${c}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '';
+
+                return `
+                    <div class="bg-white rounded-[28px] p-5 shadow-cloud border-2 border-lavender-100 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center space-x-2.5">
+                                <div class="w-8 h-8 rounded-full bg-lavender-100 flex items-center justify-center text-slate-600 text-xs font-bold border border-lavender-200">
+                                    🌸
+                                </div>
+                                <div>
+                                    <span class="text-xs font-black font-cute text-slate-800">${post.author}</span>
+                                    <span class="text-[10px] font-semibold text-slate-400 block sm:inline sm:ml-1">• ${post.time}</span>
+                                </div>
+                            </div>
+                            ${badge}
+                        </div>
+                        <p class="text-xs sm:text-sm font-semibold text-slate-700 leading-relaxed">${post.text}</p>
+                        
+                        <div class="flex items-center justify-between pt-2 text-xs font-bold text-slate-400">
+                            <div class="flex items-center space-x-4">
+                                <button type="button" onclick="likePost(${post.id})" class="hover:text-rose-500 flex items-center space-x-1.5 transition">
+                                    <i class="fa-solid fa-heart text-rose-400"></i>
+                                    <span>${post.likes}</span>
+                                </button>
+                                <button type="button" onclick="addCommentPrompt(${post.id})" class="hover:text-mama-500 flex items-center space-x-1.5 transition">
+                                    <i class="fa-solid fa-comment text-lavender-400"></i>
+                                    <span>Bình luận</span>
+                                </button>
+                            </div>
+                            <button type="button" onclick="reportPost(${post.id})" class="text-[11px] text-slate-400 hover:text-rose-500 flex items-center space-x-1">
+                                <i class="fa-solid fa-flag text-[10px]"></i>
+                                <span>Báo cáo</span>
+                            </button>
+                        </div>
+
+                        ${commentsHTML}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function likePost(id) {
+            const p = state.posts.find(item => item.id === id);
+            if (p) {
+                p.likes += 1;
+                renderForumPosts(document.getElementById('forumRoomSelect').value);
+            }
+        }
+
+        function addCommentPrompt(id) {
+            const comment = prompt('Nhập bình luận ẩn danh của mẹ:');
+            if (comment && comment.trim()) {
+                const p = state.posts.find(item => item.id === id);
+                if (p) {
+                    if (!p.comments) p.comments = [];
+                    p.comments.push(comment.trim());
+                    renderForumPosts('all');
+                }
+            }
+        }
+
+        function reportPost(id) {
+            if (window.MamaApi) {
+                MamaApi.reportPost(id, 'Nội dung độc hại / Tiêu cực');
+            }
+            alert('Cảm ơn mẹ đã báo cáo. Đội ngũ kiểm duyệt Admin đã ghi nhận và sẽ xử lý ngay!');
+            const flagBadge = document.getElementById('adminFlagCount');
+            if (flagBadge) flagBadge.innerText = '3 Cờ Đỏ AI Cảnh Báo';
+        }
+
+        function createNewPost() {
+            const text = document.getElementById('forumPostText').value.trim();
+            const room = document.getElementById('forumRoomSelect').value;
+            if (!text) {
+                alert('Mẹ vui lòng nhập nội dung tâm sự nhé!');
+                return;
+            }
+
+            // Simple Auto Content Filter
+            const toxicWords = ['lừa đảo', 'kem trộn', 'bán thuốc lậu', 'địt', 'chửi thề'];
+            const isToxic = toxicWords.some(w => text.toLowerCase().includes(w));
+            if (isToxic) {
+                alert('Bài viết chứa từ ngữ vi phạm tiêu chuẩn cộng đồng. Vui lòng kiểm tra lại!');
+                return;
+            }
+
+            const nicknames = ['Mẹ Mây Trắng', 'Mẹ Hướng Dương', 'Mẹ Gấu Bông', 'Mẹ Hạt Dẻ', 'Mẹ Búp Bê', 'Mẹ Thỏ Con'];
+            const randomNick = nicknames[Math.floor(Math.random() * nicknames.length)] + ' #' + Math.floor(Math.random() * 900 + 100);
+
+            const newP = {
+                id: Date.now(),
+                author: randomNick,
+                room: room,
+                text: text,
+                likes: 0,
+                time: 'Vừa xong',
+                comments: []
+            };
+
+            state.posts.unshift(newP);
+            document.getElementById('forumPostText').value = '';
+            renderForumPosts(room);
+
+            // Đồng bộ Node.js Backend API
+            if (window.MamaApi) {
+                MamaApi.createPost({ title: 'Tâm sự của mẹ', content: text, room: room });
+            }
+
+            alert('✨ Đã đăng bài ẩn danh thành công!');
+        }
+
+        // Medications Logic
+        function renderMedications() {
+            const list = document.getElementById('medList');
+            let takenCount = 0;
+            list.innerHTML = state.medications.map(med => {
+                if (med.taken) takenCount++;
+                return `
+                    <div class="p-3.5 bg-rose-50/60 rounded-[20px] border-2 border-rose-100 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <input type="checkbox" ${med.taken ? 'checked' : ''} onchange="toggleMed(${med.id})" class="rounded-full text-mama-500 focus:ring-mama-400 w-5 h-5 accent-mama-500 cursor-pointer">
+                            <span class="text-xs sm:text-sm font-bold ${med.taken ? 'line-through text-slate-300' : 'text-slate-800'}">${med.name}</span>
+                        </div>
+                        <span class="text-xs font-black font-cute text-rose-500 bg-white px-3 py-1 rounded-full border border-rose-200 shadow-sm">${med.time}</span>
+                    </div>
+                `;
+            }).join('');
+
+            // Update percent
+            const total = state.medications.length;
+            const pct = total > 0 ? Math.round((takenCount / total) * 100) : 0;
+            document.getElementById('medProgressPercent').innerText = `${pct}% (${takenCount}/${total} cữ)`;
+            document.getElementById('medProgressBar').style.width = `${pct}%`;
+        }
+
+        function toggleMed(id) {
+            const med = state.medications.find(m => m.id === id);
+            if (med) med.taken = !med.taken;
+            renderMedications();
+        }
+
+        function addMedicationPrompt() {
+            const name = prompt('Nhập tên thuốc hoặc vi chất (ví dụ: Sắt hữu cơ, Canxi...):');
+            const time = prompt('Nhập giờ uống (ví dụ: 14:00 PM):');
+            if (name && time) {
+                state.medications.push({ id: Date.now(), name, time, taken: false });
+                renderMedications();
+            }
+        }
+
+        // Prenatal Appointments Logic
+        function renderAppointments() {
+            const list = document.getElementById('appointmentList');
+            list.innerHTML = state.appointments.map(app => `
+                <div class="p-4 bg-baby-50/70 rounded-[22px] border-2 border-baby-100 space-y-1.5 hover:border-baby-300 transition">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-xs sm:text-sm font-black font-cute text-slate-800">${app.title}</h4>
+                        <span class="text-[10px] font-black font-cute bg-baby-200 text-baby-800 px-2.5 py-0.5 rounded-full">${app.countdown || 'Sắp tới'}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-[11px] text-slate-500 font-semibold">
+                        <span>${app.doctor}</span>
+                        <span class="font-bold text-slate-700">📅 ${app.date}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addAppointmentPrompt() {
+            const title = prompt('Tên mốc khám (ví dụ: Siêu âm 4D 28 tuần):');
+            const date = prompt('Ngày khám (ví dụ: 20/11/2026):');
+            const doctor = prompt('Bác sĩ / Bệnh viện:') || 'Bệnh viện Phụ Sản';
+            if (title && date) {
+                state.appointments.push({ id: Date.now(), title, date, doctor, countdown: 'Mới đặt' });
+                renderAppointments();
+            }
+        }
+
+        // Admin Moderation Actions
+        function adminAction(type, btn) {
+            const row = btn.closest('tr');
+            if (type === 'delete') {
+                row.remove();
+                alert('Đã gỡ bài viết vi phạm khỏi diễn đàn!');
+            } else if (type === 'sos_contact') {
+                alert('Đã kết nối nhân viên công tác xã hội & bác sĩ tâm lý đến số điện thoại khẩn cấp của mẹ bầu!');
+                btn.className = "px-3 py-1 bg-mint-600 text-white rounded-lg font-bold";
+                btn.innerText = "Đã Can Thiệp";
+            } else {
+                btn.parentElement.innerHTML = '<span class="text-mint-600 font-black text-xs font-cute">Đã duyệt ✨</span>';
+            }
+        }
+
+        // Toggle Mood Chart Period (Week / Month)
+        function toggleMoodChartPeriod(period) {
+            const btnWeek = document.getElementById('chartPeriod-week');
+            const btnMonth = document.getElementById('chartPeriod-month');
+            const trend = document.getElementById('moodTrendStatus');
+
+            if (period === 'week') {
+                btnWeek.className = "px-2.5 py-1 rounded-lg bg-white text-mama-600 shadow-sm";
+                btnMonth.className = "px-2.5 py-1 rounded-lg text-slate-500 hover:text-slate-800";
+                state.charts.mood.data.labels = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+                state.charts.mood.data.datasets[0].data = [45, 35, 25, 55, 70, 85, 40];
+                trend.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <span class="text-lg">📉</span>
+                        <div>
+                            <p class="text-xs font-black font-cute text-rose-600">Tâm trạng đang có dấu hiệu đi xuống</p>
+                            <p class="text-[10px] text-slate-500">Mẹ dễ xúc động & tủi thân hơn vào buổi tối</p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-black px-2 py-0.5 bg-rose-100 text-rose-700 rounded-full font-cute">Cần quan tâm</span>
+                `;
+            } else {
+                btnMonth.className = "px-2.5 py-1 rounded-lg bg-white text-mama-600 shadow-sm";
+                btnWeek.className = "px-2.5 py-1 rounded-lg text-slate-500 hover:text-slate-800";
+                state.charts.mood.data.labels = ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'];
+                state.charts.mood.data.datasets[0].data = [50, 65, 75, 58];
+                trend.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <span class="text-lg">📈</span>
+                        <div>
+                            <p class="text-xs font-black font-cute text-mint-600">Tổng thể tháng: Ổn định và đi lên (+12%)</p>
+                            <p class="text-[10px] text-slate-500">Mẹ đã duy trì uống nước và tập yoga đều đặn</p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-black px-2 py-0.5 bg-mint-100 text-mint-700 rounded-full font-cute">Khá tốt</span>
+                `;
+            }
+            state.charts.mood.update();
+        }
+
+        // Initialize All Charts
+        function initCharts() {
+            // 1. Mom Mood Chart
+            const ctxMood = document.getElementById('moodChart')?.getContext('2d');
+            if (ctxMood) {
+                state.charts.mood = new Chart(ctxMood, {
+                    type: 'line',
+                    data: {
+                        labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
+                        datasets: [{
+                            label: 'Chỉ số Tích cực',
+                            data: [45, 35, 25, 55, 70, 85, 40],
+                            borderColor: '#FF4D79',
+                            borderWidth: 3,
+                            backgroundColor: 'rgba(255, 77, 121, 0.15)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 5,
+                            pointBackgroundColor: '#FF4D79'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { display: false }, x: { grid: { display: false } } }
+                    }
+                });
+            }
+
+            // 2. Admin User Growth Chart
+            const ctxUser = document.getElementById('userGrowthChart')?.getContext('2d');
+            if (ctxUser) {
+                new Chart(ctxUser, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9'],
+                        datasets: [{
+                            label: 'Mẹ bầu mới',
+                            data: [1200, 1900, 2400, 3100, 3800, 4200],
+                            backgroundColor: '#38BDF8',
+                            borderRadius: 12
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            // 3. Admin Community Mood Chart
+            const ctxCommunity = document.getElementById('communityMoodChart')?.getContext('2d');
+            if (ctxCommunity) {
+                new Chart(ctxCommunity, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Vui Vẻ', 'Bình Thường', 'Lo Âu', 'Tủi Thân'],
+                        datasets: [{
+                            data: [45, 25, 18, 12],
+                            backgroundColor: ['#FACC15', '#4ADE80', '#C084FC', '#FF4D79']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+
+            // 4. Admin Revenue Pie Chart
+            const ctxRev = document.getElementById('revenuePieChart')?.getContext('2d');
+            if (ctxRev) {
+                new Chart(ctxRev, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Gói MamaCare Premium Mẹ Bầu', 'Tư Vấn Chuyên Gia Tâm Lý', 'Khóa Học Bố Bỉm VIP'],
+                        datasets: [{
+                            data: [60, 30, 10],
+                            backgroundColor: ['#FF7597', '#4ADE80', '#38BDF8']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+        }
+
+        // Tự động kiểm tra và kết nối với Node.js Backend API
+        window.addEventListener('DOMContentLoaded', async () => {
+            initCharts();
+            renderMedications();
+            renderAppointments();
+
+            if (window.MamaApi) {
+                try {
+                    const health = await MamaApi.checkHealth();
+                    const badge = document.getElementById('nodeBackendBadge');
+                    if (health && health.status === 'ok') {
+                        if (badge) {
+                            badge.classList.remove('hidden');
+                            badge.classList.add('inline-flex');
+                        }
+                        console.log('🌸 MamaCare: Kết nối thành công tới Node.js Backend API!');
+                    }
+                } catch (e) {
+                    console.log('MamaCare chạy ở chế độ Client Cache');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
