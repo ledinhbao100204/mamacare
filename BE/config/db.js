@@ -178,8 +178,8 @@ async function connectDB() {
       
       await mongoose.connect(uri, {
         dbName: 'mamacare',
-        serverSelectionTimeoutMS: 8000,
-        connectTimeoutMS: 10000
+        serverSelectionTimeoutMS: 3000,
+        connectTimeoutMS: 5000
       });
       isDbConnected = true;
       console.log(`🍃 Kết nối MongoDB Atlas Cloud thành công (database: mamacare)!`);
