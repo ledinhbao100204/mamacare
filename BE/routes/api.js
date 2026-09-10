@@ -8,6 +8,8 @@ const ForumPost = require('../models/ForumPost');
 const PartnerSync = require('../models/PartnerSync');
 const Moderation = require('../models/Moderation');
 const AiChat = require('../models/AiChat');
+const Medication = require('../models/Medication');
+const Appointment = require('../models/Appointment');
 const memoryDb = require('../data/memoryDb');
 
 // Kiểm tra trạng thái sẵn sàng của Mongoose / MongoDB Atlas
@@ -866,6 +868,118 @@ router.delete('/admin/moderation/:id', async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Lỗi gỡ bỏ nội dung' });
+  }
+});
+
+// ==========================================
+// 10. MODULE 1.5: NHẮC NHỞ LỊCH KHÁM & UỐNG THUỐC
+// ==========================================
+
+// --- Medications ---
+router.get('/reminders/medications', async (req, res) => {
+  try {
+    let medications = [];
+    if (isDbReady()) {
+      try { medications = await Medication.find().sort({ createdAt: 1 }); } catch (e) {}
+    }
+    if (!medications || medications.length === 0) {
+      medications = memoryDb.medications;
+    }
+    res.json({ success: true, medications });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Lỗi tải danh sách thuốc' });
+  }
+});
+
+router.post('/reminders/medications', async (req, res) => {
+  try {
+    const { name, time, userId = 'system' } = req.body;
+    if (!name || !time) return res.status(400).json({ success: false, message: 'Tên thuốc và giờ uống không được để trống' });
+    
+    let newMed = null;
+    const medData = { name: name.trim(), time: time.trim(), taken: false, userId, createdAt: new Date() };
+
+    if (isDbReady()) {
+      try { newMed = await Medication.create(medData); } catch (e) {}
+    }
+    
+    if (!newMed) {
+      newMed = { ...medData, id: 'med-' + Date.now(), _id: 'med-' + Date.now() };
+      memoryDb.medications.push(newMed);
+    }
+    
+    res.status(201).json({ success: true, message: 'Đã thêm thuốc mới', medication: newMed });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Lỗi thêm thuốc' });
+  }
+});
+
+router.put('/reminders/medications/:id/toggle', async (req, res) => {
+  try {
+    const { id } = req.params;
+    let updatedMed = null;
+    
+    if (isDbReady()) {
+      try {
+        const med = await Medication.findById(id);
+        if (med) {
+          med.taken = !med.taken;
+          updatedMed = await med.save();
+        }
+      } catch (e) {}
+    }
+    
+    if (!updatedMed) {
+      const memMed = memoryDb.medications.find(m => m._id === id || m.id === id);
+      if (memMed) {
+        memMed.taken = !memMed.taken;
+        updatedMed = memMed;
+      }
+    }
+    
+    if (!updatedMed) return res.status(404).json({ success: false, message: 'Không tìm thấy thuốc' });
+    res.json({ success: true, medication: updatedMed });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Lỗi cập nhật trạng thái thuốc' });
+  }
+});
+
+// --- Appointments ---
+router.get('/reminders/appointments', async (req, res) => {
+  try {
+    let appointments = [];
+    if (isDbReady()) {
+      try { appointments = await Appointment.find().sort({ createdAt: 1 }); } catch (e) {}
+    }
+    if (!appointments || appointments.length === 0) {
+      appointments = memoryDb.appointments;
+    }
+    res.json({ success: true, appointments });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Lỗi tải lịch khám' });
+  }
+});
+
+router.post('/reminders/appointments', async (req, res) => {
+  try {
+    const { title, date, doctor, userId = 'system' } = req.body;
+    if (!title || !date) return res.status(400).json({ success: false, message: 'Tên lịch khám và ngày không được để trống' });
+    
+    let newApp = null;
+    const appData = { title: title.trim(), date: date.trim(), doctor: doctor ? doctor.trim() : 'Bác sĩ sản khoa', userId, createdAt: new Date() };
+
+    if (isDbReady()) {
+      try { newApp = await Appointment.create(appData); } catch (e) {}
+    }
+    
+    if (!newApp) {
+      newApp = { ...appData, id: 'app-' + Date.now(), _id: 'app-' + Date.now() };
+      memoryDb.appointments.push(newApp);
+    }
+    
+    res.status(201).json({ success: true, message: 'Đã thêm lịch khám mới', appointment: newApp });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Lỗi thêm lịch khám' });
   }
 });
 

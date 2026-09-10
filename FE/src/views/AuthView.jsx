@@ -203,6 +203,28 @@ export default function AuthView({ onAuthSuccess, initialMode = 'login', onCance
             <button type="submit" className="auth-submit-btn" disabled={loading}>
               {loading ? '⏳ Đang Xử Lý...' : '🚀 Đăng Nhập'}
             </button>
+
+            {/* QUICK LOGIN SECTION */}
+            <div className="quick-login-section" style={{ marginTop: '20px', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
+              <p style={{ fontSize: '0.85rem', color: '#718096', marginBottom: '10px', textAlign: 'center' }}>Đăng nhập nhanh (Test):</p>
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => { setLoginEmail('0388558698'); setLoginPassword('abc'); }}
+                  style={{ flex: 1, padding: '8px', fontSize: '0.85rem', borderRadius: '6px', border: '1px solid #cbd5e0', background: '#f7fafc', cursor: 'pointer' }}
+                >🌸 Mẹ Bầu</button>
+                <button
+                  type="button"
+                  onClick={() => { setLoginEmail('bobim@mamacare.vn'); setLoginPassword('password123'); }}
+                  style={{ flex: 1, padding: '8px', fontSize: '0.85rem', borderRadius: '6px', border: '1px solid #cbd5e0', background: '#f7fafc', cursor: 'pointer' }}
+                >🧸 Bố Bỉm</button>
+                <button
+                  type="button"
+                  onClick={() => { setLoginEmail('admin@mamacare.vn'); setLoginPassword('adminpassword123'); }}
+                  style={{ flex: 1, padding: '8px', fontSize: '0.85rem', borderRadius: '6px', border: '1px solid #cbd5e0', background: '#f7fafc', cursor: 'pointer' }}
+                >🛡️ Admin</button>
+              </div>
+            </div>
           </form>
         )}
 

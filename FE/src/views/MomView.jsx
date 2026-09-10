@@ -95,16 +95,26 @@ export default function MomView({ onTriggerSos }) {
   ]);
 
   // Module 1.5 Medications & Appointments
-  const [medications, setMedications] = useState([
-    { id: 1, name: "Sắt hữu cơ Fumafer (1 viên sau ăn sáng)", time: "08:00 AM", taken: true },
-    { id: 2, name: "Canxi Nano BioCal (1 viên sau ăn trưa)", time: "13:00 PM", taken: true },
-    { id: 3, name: "DHA Thai kỳ BioIsland (2 viên sau ăn tối)", time: "19:30 PM", taken: false },
-    { id: 4, name: "Acid Folic 400mcg (1 viên trước khi ngủ)", time: "21:30 PM", taken: false }
-  ]);
-  const [appointments, setAppointments] = useState([
-    { id: 1, title: "Siêu âm hình thái 4D (Mốc Tuần 22)", date: "14/09/2026", doctor: "BS. Nguyễn Mai Phương", countdown: "Còn 5 ngày" },
-    { id: 2, title: "Nghiệm pháp dung nạp Glucose (Tuần 26)", date: "05/10/2026", doctor: "BS. Lê Hoàng Nam", countdown: "Còn 26 ngày" }
-  ]);
+  const [medications, setMedications] = useState([]);
+  const [appointments, setAppointments] = useState([]);
+  const [showAddMed, setShowAddMed] = useState(false);
+  const [newMed, setNewMed] = useState({ name: '', time: '' });
+  const [showAddApp, setShowAddApp] = useState(false);
+  const [newApp, setNewApp] = useState({ title: '', date: '', doctor: '' });
+
+  const fetchReminders = async () => {
+    const medRes = await MamaApi.getMedications();
+    if (medRes && medRes.success) setMedications(medRes.medications);
+    
+    const appRes = await MamaApi.getAppointments();
+    if (appRes && appRes.success) setAppointments(appRes.appointments);
+  };
+
+  useEffect(() => {
+    if (activeTab === 'reminders') {
+      fetchReminders();
+    }
+  }, [activeTab]);
 
   // Khởi tạo và cập nhật Chart.js cho Module 1.1
   useEffect(() => {
@@ -140,14 +150,42 @@ export default function MomView({ onTriggerSos }) {
     }
   }, [activeTab, chartPeriod]);
 
+  // Handlers: Lịch Khám & Thuốc (Module 1.5)
+  const handleToggleMed = async (id) => {
+    const res = await MamaApi.toggleMedication(id);
+    if (res && res.success) {
+      setMedications(prev => prev.map(m => (m.id === id || m._id === id) ? { ...m, taken: res.medication.taken } : m));
+    }
+  };
+
+  const handleAddMedSubmit = async (e) => {
+    e.preventDefault();
+    const res = await MamaApi.addMedication(newMed);
+    if (res && res.success) {
+      setMedications([...medications, res.medication]);
+      setNewMed({ name: '', time: '' });
+      setShowAddMed(false);
+    }
+  };
+
+  const handleAddAppSubmit = async (e) => {
+    e.preventDefault();
+    const res = await MamaApi.addAppointment(newApp);
+    if (res && res.success) {
+      setAppointments([...appointments, res.appointment]);
+      setNewApp({ title: '', date: '', doctor: '' });
+      setShowAddApp(false);
+    }
+  };
+
   // Handler: Lưu Check-in cảm xúc
   const handleSaveMood = async () => {
     const payload = {
       mood: selectedMood.title,
       symptoms,
       waterCount,
-      weight,
-      temperature,
+      weight: parseFloat(weight) || 0,
+      temperature: parseFloat(temperature) || 0,
       journal: journalText
     };
     await MamaApi.submitMoodCheckIn(payload);
@@ -507,26 +545,31 @@ export default function MomView({ onTriggerSos }) {
                         <div className="flex items-center justify-center space-x-1.5">
                           <button
                             type="button"
-                            onClick={() => setWeight(prev => Number((Math.max(30, prev - 0.1)).toFixed(1)))}
+                            onClick={() => setWeight(prev => Number((Math.max(30, (parseFloat(prev) || 0) - 0.1)).toFixed(1)))}
                             className="w-7 h-7 rounded-full bg-white text-amber-700 font-bold border border-amber-300 text-xs hover:bg-amber-100 flex items-center justify-center transition shadow-xs cursor-pointer"
                             title="Giảm cân nặng (-0.1 kg)"
                           >
                             -
                           </button>
                           <input
-                            type="number"
-                            step="0.1"
+                            type="text"
+                            inputMode="decimal"
                             value={weight}
-                            onChange={(e) => {
+                            onChange={(e) => setWeight(e.target.value)}
+                            onBlur={(e) => {
                               const val = parseFloat(e.target.value);
-                              if (!isNaN(val)) setWeight(Number(val.toFixed(1)));
+                              if (!isNaN(val)) {
+                                setWeight(Number(val.toFixed(1)));
+                              } else {
+                                setWeight(initialWeight);
+                              }
                             }}
                             className="w-14 text-center text-lg font-black font-cute text-slate-800 bg-transparent border-b border-dashed border-amber-400 focus:outline-none focus:border-amber-600"
                             title="Nhấp để nhập trực tiếp số cân nặng"
                           />
                           <button
                             type="button"
-                            onClick={() => setWeight(prev => Number((Math.min(150, prev + 0.1)).toFixed(1)))}
+                            onClick={() => setWeight(prev => Number((Math.min(150, (parseFloat(prev) || 0) + 0.1)).toFixed(1)))}
                             className="w-7 h-7 rounded-full bg-amber-500 text-white font-bold text-xs hover:bg-amber-600 flex items-center justify-center transition shadow-xs cursor-pointer"
                             title="Tăng cân nặng (+0.1 kg)"
                           >
@@ -534,7 +577,7 @@ export default function MomView({ onTriggerSos }) {
                           </button>
                         </div>
                         <span className="text-[10px] text-slate-500 block font-bold mt-1">
-                          Kg ({weight >= initialWeight ? `+${(weight - initialWeight).toFixed(1)}` : (weight - initialWeight).toFixed(1)}kg)
+                          Kg ({(parseFloat(weight) || 0) >= initialWeight ? `+${((parseFloat(weight) || 0) - initialWeight).toFixed(1)}` : ((parseFloat(weight) || 0) - initialWeight).toFixed(1)}kg)
                         </span>
                       </div>
 
@@ -545,34 +588,39 @@ export default function MomView({ onTriggerSos }) {
                         <div className="flex items-center justify-center space-x-1.5">
                           <button
                             type="button"
-                            onClick={() => setTemperature(prev => Number((Math.max(34, prev - 0.1)).toFixed(1)))}
+                            onClick={() => setTemperature(prev => Number((Math.max(34, (parseFloat(prev) || 0) - 0.1)).toFixed(1)))}
                             className="w-7 h-7 rounded-full bg-white text-amber-700 font-bold border border-amber-300 text-xs hover:bg-amber-100 flex items-center justify-center transition shadow-xs cursor-pointer"
                             title="Giảm thân nhiệt (-0.1 °C)"
                           >
                             -
                           </button>
                           <input
-                            type="number"
-                            step="0.1"
+                            type="text"
+                            inputMode="decimal"
                             value={temperature}
-                            onChange={(e) => {
+                            onChange={(e) => setTemperature(e.target.value)}
+                            onBlur={(e) => {
                               const val = parseFloat(e.target.value);
-                              if (!isNaN(val)) setTemperature(Number(val.toFixed(1)));
+                              if (!isNaN(val)) {
+                                setTemperature(Number(val.toFixed(1)));
+                              } else {
+                                setTemperature(36.8);
+                              }
                             }}
                             className="w-14 text-center text-lg font-black font-cute text-slate-800 bg-transparent border-b border-dashed border-amber-400 focus:outline-none focus:border-amber-600"
                             title="Nhấp để nhập trực tiếp thân nhiệt"
                           />
                           <button
                             type="button"
-                            onClick={() => setTemperature(prev => Number((Math.min(42, prev + 0.1)).toFixed(1)))}
+                            onClick={() => setTemperature(prev => Number((Math.min(42, (parseFloat(prev) || 0) + 0.1)).toFixed(1)))}
                             className="w-7 h-7 rounded-full bg-amber-500 text-white font-bold text-xs hover:bg-amber-600 flex items-center justify-center transition shadow-xs cursor-pointer"
                             title="Tăng thân nhiệt (+0.1 °C)"
                           >
                             +
                           </button>
                         </div>
-                        <span className={`text-[10px] block font-bold mt-1 ${temperature > 37.5 ? 'text-rose-600' : 'text-slate-500'}`}>
-                          °C {temperature < 36.0 ? 'Hạ nhiệt' : temperature <= 37.3 ? 'Bình thường' : temperature <= 38.0 ? 'Sốt nhẹ' : 'Sốt cao ⚠️'}
+                        <span className={`text-[10px] block font-bold mt-1 ${(parseFloat(temperature) || 0) > 37.5 ? 'text-rose-600' : 'text-slate-500'}`}>
+                          °C {(parseFloat(temperature) || 0) < 36.0 ? 'Hạ nhiệt' : (parseFloat(temperature) || 0) <= 37.3 ? 'Bình thường' : (parseFloat(temperature) || 0) <= 38.0 ? 'Sốt nhẹ' : 'Sốt cao ⚠️'}
                         </span>
                       </div>
                     </div>
@@ -915,33 +963,38 @@ export default function MomView({ onTriggerSos }) {
       {/* MODULE 1.5: LỊCH KHÁM & THUỐC */}
       {activeTab === 'reminders' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-[32px] p-6 sm:p-8 shadow-cloud border-4 border-sky-100 space-y-4">
+          <div className="bg-white rounded-[32px] p-6 sm:p-8 shadow-cloud border-4 border-rose-100 space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-base font-black font-cute text-slate-800">Checklist Uống Thuốc Hôm Nay</h3>
-                <p className="text-xs text-sky-600 font-black font-cute">
-                  {Math.round((medications.filter(m => m.taken).length / medications.length) * 100)}% ({medications.filter(m => m.taken).length}/{medications.length} cữ)
+                <p className="text-xs text-rose-600 font-black font-cute">
+                  {medications.length > 0 ? Math.round((medications.filter(m => m.taken).length / medications.length) * 100) : 0}% ({medications.filter(m => m.taken).length}/{medications.length} cữ)
                 </p>
               </div>
+              <button 
+                type="button" 
+                onClick={() => setShowAddMed(true)}
+                className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center hover:bg-rose-200 transition"
+              >
+                <i className="fa-solid fa-plus"></i>
+              </button>
             </div>
 
             <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-sky-400 to-blue-500 rounded-full transition-all duration-500"
-                style={{ width: `${(medications.filter(m => m.taken).length / medications.length) * 100}%` }}
+                className="h-full bg-gradient-to-r from-rose-400 to-pink-500 rounded-full transition-all duration-500"
+                style={{ width: `${medications.length > 0 ? (medications.filter(m => m.taken).length / medications.length) * 100 : 0}%` }}
               ></div>
             </div>
 
             <div className="space-y-2 pt-2">
               {medications.map(med => (
-                <div key={med.id} className="p-3.5 bg-rose-50/60 rounded-[20px] border-2 border-rose-100 flex items-center justify-between">
+                <div key={med._id || med.id} className="p-3.5 bg-rose-50/60 rounded-[20px] border-2 border-rose-100 flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <input
                       type="checkbox"
                       checked={med.taken}
-                      onChange={() => {
-                        setMedications(prev => prev.map(m => m.id === med.id ? { ...m, taken: !m.taken } : m));
-                      }}
+                      onChange={() => handleToggleMed(med._id || med.id)}
                       className="rounded-full text-rose-500 w-5 h-5 accent-rose-500 cursor-pointer"
                     />
                     <span className={`text-xs sm:text-sm font-bold ${med.taken ? 'line-through text-slate-400' : 'text-slate-800'}`}>
@@ -954,17 +1007,45 @@ export default function MomView({ onTriggerSos }) {
                 </div>
               ))}
             </div>
+            
+            {/* Add Medication Modal */}
+            {showAddMed && (
+              <form onSubmit={handleAddMedSubmit} className="mt-4 p-4 bg-rose-50 border border-rose-200 rounded-2xl space-y-3 relative">
+                <button type="button" onClick={() => setShowAddMed(false)} className="absolute top-2 right-3 text-slate-400 hover:text-rose-500"><i className="fa-solid fa-xmark"></i></button>
+                <h4 className="text-sm font-bold text-rose-700 font-cute">Thêm Thuốc Mới</h4>
+                <input 
+                  type="text" required placeholder="Tên thuốc (VD: Canxi Nano)" 
+                  value={newMed.name} onChange={e => setNewMed({...newMed, name: e.target.value})}
+                  className="w-full text-xs p-2.5 rounded-xl border border-rose-200 focus:outline-rose-400"
+                />
+                <input 
+                  type="text" required placeholder="Giờ uống (VD: 08:00 AM)" 
+                  value={newMed.time} onChange={e => setNewMed({...newMed, time: e.target.value})}
+                  className="w-full text-xs p-2.5 rounded-xl border border-rose-200 focus:outline-rose-400"
+                />
+                <button type="submit" className="w-full py-2 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl text-xs shadow-sm">Lưu Thuốc</button>
+              </form>
+            )}
           </div>
 
           <div className="bg-white rounded-[32px] p-6 sm:p-8 shadow-cloud border-4 border-sky-100 space-y-4">
-            <h3 className="text-base font-black font-cute text-slate-800">Mốc Khám Thai Định Kỳ</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-black font-cute text-slate-800">Mốc Khám Thai Định Kỳ</h3>
+              <button 
+                type="button" 
+                onClick={() => setShowAddApp(true)}
+                className="w-8 h-8 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center hover:bg-sky-200 transition"
+              >
+                <i className="fa-solid fa-plus"></i>
+              </button>
+            </div>
             <div className="space-y-3 pt-2">
               {appointments.map(app => (
-                <div key={app.id} className="p-4 bg-sky-50/70 rounded-[22px] border-2 border-sky-100 space-y-1.5">
+                <div key={app._id || app.id} className="p-4 bg-sky-50/70 rounded-[22px] border-2 border-sky-100 space-y-1.5">
                   <div className="flex justify-between items-center">
                     <h4 className="text-xs sm:text-sm font-black font-cute text-slate-800">{app.title}</h4>
                     <span className="text-[10px] font-black font-cute bg-sky-200 text-sky-800 px-2.5 py-0.5 rounded-full">
-                      {app.countdown}
+                      {app.countdown || 'Sắp tới'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-[11px] text-slate-500 font-semibold">
@@ -974,6 +1055,30 @@ export default function MomView({ onTriggerSos }) {
                 </div>
               ))}
             </div>
+
+            {/* Add Appointment Modal */}
+            {showAddApp && (
+              <form onSubmit={handleAddAppSubmit} className="mt-4 p-4 bg-sky-50 border border-sky-200 rounded-2xl space-y-3 relative">
+                <button type="button" onClick={() => setShowAddApp(false)} className="absolute top-2 right-3 text-slate-400 hover:text-sky-500"><i className="fa-solid fa-xmark"></i></button>
+                <h4 className="text-sm font-bold text-sky-700 font-cute">Thêm Lịch Khám/Tiêm Mới</h4>
+                <input 
+                  type="text" required placeholder="Tên mốc khám/tiêm (VD: Tiêm Uốn Ván)" 
+                  value={newApp.title} onChange={e => setNewApp({...newApp, title: e.target.value})}
+                  className="w-full text-xs p-2.5 rounded-xl border border-sky-200 focus:outline-sky-400"
+                />
+                <input 
+                  type="text" required placeholder="Ngày khám (VD: 20/10/2026)" 
+                  value={newApp.date} onChange={e => setNewApp({...newApp, date: e.target.value})}
+                  className="w-full text-xs p-2.5 rounded-xl border border-sky-200 focus:outline-sky-400"
+                />
+                <input 
+                  type="text" placeholder="Tên bác sĩ / Phòng khám (Tùy chọn)" 
+                  value={newApp.doctor} onChange={e => setNewApp({...newApp, doctor: e.target.value})}
+                  className="w-full text-xs p-2.5 rounded-xl border border-sky-200 focus:outline-sky-400"
+                />
+                <button type="submit" className="w-full py-2 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-xs shadow-sm">Lưu Lịch Khám</button>
+              </form>
+            )}
           </div>
         </div>
       )}

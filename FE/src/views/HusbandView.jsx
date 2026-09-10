@@ -17,6 +17,7 @@ export default function HusbandView({ onOpenQr, onOpenBootcamp }) {
   });
 
   const [actionsTaken, setActionsTaken] = useState([]);
+  const [customMessage, setCustomMessage] = useState('');
 
   useEffect(() => {
     MamaApi.getPartnerSync().then(res => {
@@ -108,13 +109,25 @@ export default function HusbandView({ onOpenQr, onOpenBootcamp }) {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => handleAction('hug', 'Gửi cái ôm ấm áp')}
-              className="w-full py-3 bg-white text-slate-800 rounded-2xl font-black font-cute text-xs shadow-sm hover:bg-slate-50 bounce-hover flex items-center justify-center space-x-2"
-            >
-              <span>💌 Gửi Yêu Thương Đến Màn Hình Vợ</span>
-            </button>
+            <div className="space-y-2 mt-2">
+              <input
+                type="text"
+                placeholder="Nhập lời nhắn yêu thương thủ công..."
+                value={customMessage}
+                onChange={(e) => setCustomMessage(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-rose-100 text-xs font-semibold text-slate-700 outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 placeholder:text-slate-400 shadow-inner bg-white/80"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  handleAction('hug', customMessage.trim() || 'Gửi cái ôm ấm áp');
+                  setCustomMessage('');
+                }}
+                className="w-full py-3 bg-white text-slate-800 rounded-2xl font-black font-cute text-xs shadow-sm hover:bg-slate-50 bounce-hover flex items-center justify-center space-x-2"
+              >
+                <span>💌 Gửi Yêu Thương Đến Màn Hình Vợ</span>
+              </button>
+            </div>
           </div>
         </div>
 

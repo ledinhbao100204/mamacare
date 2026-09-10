@@ -27,8 +27,8 @@ async function seedInitialData() {
       const mom = await User.create({
         name: 'Nguyễn Thùy Trang',
         email: 'mebau@mamacare.vn',
-        phone: '0988112233',
-        password: 'password123',
+        phone: '0388558698',
+        password: 'abc',
         role: 'mom',
         roleName: 'Mẹ Bầu',
         avatar: '🌸',

@@ -8,8 +8,8 @@ const memoryDb = {
       _id: 'usr-mom-01',
       name: 'Nguyễn Thùy Trang',
       email: 'mebau@mamacare.vn',
-      phone: '0988112233',
-      password: 'password123',
+      phone: '0388558698',
+      password: 'abc',
       role: 'mom',
       roleName: 'Mẹ Bầu',
       avatar: '🌸',
@@ -168,7 +168,19 @@ const memoryDb = {
     }
   ],
 
-  chats: []
+  chats: [],
+
+  medications: [
+    { id: 'med-1', _id: 'med-1', userId: 'system', name: "Sắt hữu cơ Fumafer (1 viên sau ăn sáng)", time: "08:00 AM", taken: true, createdAt: new Date() },
+    { id: 'med-2', _id: 'med-2', userId: 'system', name: "Canxi Nano BioCal (1 viên sau ăn trưa)", time: "13:00 PM", taken: true, createdAt: new Date() },
+    { id: 'med-3', _id: 'med-3', userId: 'system', name: "DHA Thai kỳ BioIsland (2 viên sau ăn tối)", time: "19:30 PM", taken: false, createdAt: new Date() },
+    { id: 'med-4', _id: 'med-4', userId: 'system', name: "Acid Folic 400mcg (1 viên trước khi ngủ)", time: "21:30 PM", taken: false, createdAt: new Date() }
+  ],
+
+  appointments: [
+    { id: 'app-1', _id: 'app-1', userId: 'system', title: "Siêu âm hình thái 4D (Mốc Tuần 22)", date: "14/09/2026", doctor: "BS. Nguyễn Mai Phương", createdAt: new Date() },
+    { id: 'app-2', _id: 'app-2', userId: 'system', title: "Nghiệm pháp dung nạp Glucose (Tuần 26)", date: "05/10/2026", doctor: "BS. Lê Hoàng Nam", createdAt: new Date() }
+  ]
 };
 
 module.exports = memoryDb;

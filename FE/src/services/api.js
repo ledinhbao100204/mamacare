@@ -143,6 +143,60 @@ export const MamaApi = {
     }
   },
 
+  // --- Module 1.5 Reminders ---
+  async getMedications() {
+    try {
+      const res = await fetch(`${API_BASE}/reminders/medications`);
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async addMedication(medData) {
+    try {
+      const res = await fetch(`${API_BASE}/reminders/medications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(medData)
+      });
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async toggleMedication(id) {
+    try {
+      const res = await fetch(`${API_BASE}/reminders/medications/${id}/toggle`, { method: 'PUT' });
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async getAppointments() {
+    try {
+      const res = await fetch(`${API_BASE}/reminders/appointments`);
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async addAppointment(appData) {
+    try {
+      const res = await fetch(`${API_BASE}/reminders/appointments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(appData)
+      });
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
   // Auth Methods
   async login(emailOrPhone, password) {
     try {
