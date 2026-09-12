@@ -34,8 +34,8 @@ const ForumPostSchema = new mongoose.Schema({
   },
   room: {
     type: String,
-    enum: ['all', '3months', '6months', '9months', 'postpartum', 'doctor'],
-    default: '3months'
+    enum: ['all', '3months', '6months', '9months', 'postpartum', 'doctor', 'rage', 'advice', 'joy'],
+    default: 'all'
   },
   title: {
     type: String,

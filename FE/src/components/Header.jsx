@@ -6,13 +6,18 @@ export default function Header({
   onLogout,
   currentRole,
   setCurrentRole,
-  onTriggerBell
+  onTriggerBell,
+  onOpenProfile
 }) {
   return (
     <header className="bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b-4 border-rose-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         {/* Brand Logo */}
-        <div className="flex items-center space-x-3 group">
+        <div 
+          onClick={() => setCurrentRole(currentUser?.role || 'mom')}
+          className="flex items-center space-x-3 group cursor-pointer"
+          title="Về trang chủ phân hệ"
+        >
           <div className="w-12 h-12 rounded-3xl bg-gradient-to-tr from-rose-400 via-pink-300 to-amber-200 flex items-center justify-center text-white shadow-cute bounce-hover border-2 border-white">
             <span className="text-2xl animate-bounce">🍼</span>
           </div>
@@ -97,21 +102,31 @@ export default function Header({
               </div>
             )}
 
-            {/* Thông tin tài khoản người dùng & Nút Đăng xuất */}
-            <div className="flex items-center space-x-2 bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-full px-3 py-1 shadow-sm">
-              <span className="text-xl">{currentUser.avatar || '👤'}</span>
-              <div className="hidden sm:flex flex-col text-left">
-                <span className="text-xs font-black text-slate-700 leading-tight">
-                  {currentUser.name}
+            {/* Thông tin tài khoản người dùng: BẤM VÀO TÊN ĐỂ VÀO PROFILE */}
+            <div className="flex items-center space-x-1.5 bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-full pl-1.5 pr-2 py-1 shadow-sm">
+              <button
+                type="button"
+                onClick={onOpenProfile}
+                title="Bấm vào đây để vào Trang Profile cá nhân & Ghép đôi"
+                className="flex items-center space-x-2 hover:opacity-90 transition cursor-pointer text-left focus:outline-none group/profile"
+              >
+                <span className="text-xl bg-white w-8 h-8 rounded-full flex items-center justify-center shadow-xs border border-rose-100 group-hover/profile:scale-105 transition-transform">
+                  {currentUser.avatar || '👤'}
                 </span>
-                <span className="text-[10px] text-rose-500 font-bold">
-                  {currentUser.role === 'mom' && currentUser.pregnancyWeek
-                    ? `Mẹ Bầu • Tuần ${currentUser.pregnancyWeek}`
-                    : (currentUser.role === 'husband' && currentUser.partnerCode
-                        ? `Bố Bỉm • ${currentUser.partnerCode}`
-                        : currentUser.roleName || 'Thành viên')}
-                </span>
-              </div>
+                <div className="hidden sm:flex flex-col text-left pr-1">
+                  <span className="text-xs font-black text-slate-700 leading-tight group-hover/profile:text-rose-600 transition flex items-center gap-1">
+                    <span>{currentUser.name}</span>
+                    <i className="fa-solid fa-circle-user text-[11px] text-rose-400"></i>
+                  </span>
+                  <span className="text-[10px] text-rose-500 font-bold">
+                    {currentUser.role === 'mom' && currentUser.pregnancyWeek
+                      ? `Mẹ Bầu • Tuần ${currentUser.pregnancyWeek}`
+                      : (currentUser.role === 'husband' && currentUser.partnerCode
+                          ? `Bố Bỉm • ${currentUser.partnerCode}`
+                          : currentUser.roleName || 'Thành viên')}
+                  </span>
+                </div>
+              </button>
               <button
                 type="button"
                 onClick={onLogout}

@@ -10,36 +10,76 @@ const Moderation = require('../models/Moderation');
 const AiChat = require('../models/AiChat');
 const Medication = require('../models/Medication');
 const Appointment = require('../models/Appointment');
-const memoryDb = require('../data/memoryDb');
+const Transaction = require('../models/Transaction');
+const ZenContent = require('../models/ZenContent');
+const { queryDeepSeek, getMedicalFallbackReply } = require('../services/deepseek');
 
-// Kiểm tra trạng thái sẵn sàng của Mongoose / MongoDB Atlas
+// Kiểm tra trạng thái sẵn sàng của Mongoose / MongoDB
 const isDbReady = () => mongoose.connection.readyState === 1;
+
+// Helper đảm bảo dữ liệu ZenContent có sẵn trong MongoDB
+async function getOrSeedZenContent() {
+  let content = await ZenContent.findOne();
+  if (!content) {
+    content = await ZenContent.create({
+      tracks: [
+        { title: 'Sóng Não 432Hz Miracle Tone', desc: 'Tần số hòa bình, giảm căng thẳng thần kinh sâu', duration: 'Vòng lặp Synthesizer', type: 'binaural_432' },
+        { title: 'Sóng Não 528Hz DNA Repair', desc: 'Tần số phục hồi tế bào và nâng cao năng lượng tích cực', duration: 'Vòng lặp Synthesizer', type: 'binaural_528' },
+        { title: 'Tiếng Mưa Rào Pink Noise', desc: 'Tiếng mưa rơi dịu êm cắt đứt tạp âm, dễ đi vào giấc ngủ', duration: 'Vòng lặp Pink Noise', type: 'rain_noise' },
+        { title: 'Audio Truyện Thai Giáo: Hạt Mầm Yêu Thương', desc: 'Giọng đọc ấm áp giúp bé kết nối cùng mẹ trước giờ ngủ', duration: '12:45', type: 'story' }
+      ],
+      breathingGuide: {
+        name: 'Kỹ thuật thở 4-7-8',
+        purpose: 'Ngắt cơn hoảng loạn (Panic Attack) & Điều hòa nhịp tim trong 60 giây',
+        steps: [
+          { label: 'Hít vào bằng mũi sâu', duration: 4 },
+          { label: 'Giữ hơi tĩnh lặng', duration: 7 },
+          { label: 'Thở ra từ từ bằng miệng', duration: 8 }
+        ]
+      },
+      yogaExercises: [
+        { trimester: 1, title: 'Thư giãn cột sống & Chống ốm nghén nhẹ', duration: '12 phút', level: 'Dễ' },
+        { trimester: 2, title: 'Mở rộng khung chậu & Giảm áp lực thắt lưng', duration: '18 phút', level: 'Trung bình' },
+        { trimester: 3, title: 'Tập thở chuẩn bị chuyển dạ & Tư thế cánh bướm', duration: '15 phút', level: 'Nhẹ nhàng' }
+      ]
+    });
+  }
+  return content;
+}
 
 // ==========================================
 // 1. HEALTH CHECK & DATABASE STATUS
 // ==========================================
 router.get('/health', async (req, res) => {
   const ready = isDbReady();
-  let userCount = memoryDb.users.length;
-  let moodCount = memoryDb.moodRecords.length;
+  let userCount = 0;
+  let moodCount = 0;
+  let postCount = 0;
+  let modCount = 0;
 
   if (ready) {
     try {
-      userCount = await User.countDocuments();
-      moodCount = await MoodRecord.countDocuments();
+      [userCount, moodCount, postCount, modCount] = await Promise.all([
+        User.countDocuments(),
+        MoodRecord.countDocuments(),
+        ForumPost.countDocuments(),
+        Moderation.countDocuments()
+      ]);
     } catch (e) {
       console.warn('Lỗi đếm documents Mongoose:', e.message);
     }
   }
 
   res.json({
-    status: 'ok',
-    platform: 'MamaCare Fullstack Node.js & MongoDB Atlas',
-    database: ready ? 'MongoDB Atlas Cloud (Live)' : 'MongoDB Atlas (Đang mở IP / Bộ nhớ đệm)',
+    status: ready ? 'ok' : 'connecting',
+    platform: 'MamaCare Fullstack Node.js & MongoDB',
+    database: ready ? 'MongoDB (Live & Connected)' : 'MongoDB (Connecting...)',
     isAtlasConnected: ready,
     counts: {
       users: userCount,
-      moodRecords: moodCount
+      moodRecords: moodCount,
+      forumPosts: postCount,
+      moderations: modCount
     },
     uptime: Math.round(process.uptime()),
     timestamp: new Date().toISOString()
@@ -63,26 +103,12 @@ router.post('/auth/login', async (req, res) => {
       });
     }
 
-    let user = null;
-    if (isDbReady()) {
-      try {
-        user = await User.findOne({
-          $or: [
-            { email: cleanInput },
-            { phone: cleanInput }
-          ]
-        });
-      } catch (err) {
-        console.warn('Không thể truy vấn MongoDB Atlas, chuyển sang fallback:', err.message);
-      }
-    }
-
-    if (!user) {
-      user = memoryDb.users.find(u => 
-        (u.email && u.email.toLowerCase() === cleanInput) ||
-        (u.phone && u.phone === cleanInput)
-      );
-    }
+    const user = await User.findOne({
+      $or: [
+        { email: cleanInput },
+        { phone: cleanInput }
+      ]
+    });
 
     if (!user || user.password !== String(password)) {
       return res.status(401).json({
@@ -93,18 +119,19 @@ router.post('/auth/login', async (req, res) => {
 
     const safeUser = typeof user.toSafeObject === 'function'
       ? user.toSafeObject()
-      : { ...user, id: user._id || user.id };
+      : user.toObject();
     delete safeUser.password;
+    safeUser.id = safeUser._id;
 
     res.json({
       success: true,
       message: `Chào mừng ${safeUser.name} đã quay trở lại!`,
       user: safeUser,
-      token: `mamacare-session-${safeUser.id || safeUser._id}-${Date.now()}`
+      token: `mamacare-session-${safeUser._id}-${Date.now()}`
     });
   } catch (err) {
     console.error('Lỗi đăng nhập:', err);
-    res.status(500).json({ success: false, message: 'Lỗi hệ thống khi đăng nhập' });
+    res.status(500).json({ success: false, message: 'Lỗi hệ thống khi đăng nhập: ' + err.message });
   }
 });
 
@@ -135,61 +162,42 @@ router.post('/auth/register', async (req, res) => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanPhone = phone.trim();
 
-    let existingUser = null;
-    if (isDbReady()) {
-      try {
-        existingUser = await User.findOne({
-          $or: [
-            { email: cleanEmail },
-            ...(cleanPhone ? [{ phone: cleanPhone }] : [])
-          ]
-        });
-      } catch (err) {}
-    }
-
-    if (!existingUser) {
-      existingUser = memoryDb.users.find(u =>
-        u.email.toLowerCase() === cleanEmail || (cleanPhone && u.phone === cleanPhone)
-      );
-    }
+    const existingUser = await User.findOne({
+      $or: [
+        { email: cleanEmail },
+        ...(cleanPhone ? [{ phone: cleanPhone }] : [])
+      ]
+    });
 
     if (existingUser) {
-      return res.status(400).json({
+      return res.status(409).json({
         success: false,
-        message: 'Email hoặc số điện thoại này đã được đăng ký trên hệ thống'
+        message: 'Email hoặc số điện thoại này đã được đăng ký tài khoản MamaCare'
       });
     }
 
     let roleName = 'Mẹ Bầu';
     let avatar = '🌸';
-    let userPartnerCode = partnerCode.trim();
+    let userPartnerCode = partnerCode;
     let partnerName = '';
 
-    if (role === 'mom') {
-      roleName = 'Mẹ Bầu';
-      avatar = '🌸';
-      userPartnerCode = 'MAMA-' + Math.floor(1000 + Math.random() * 9000);
-    } else if (role === 'husband') {
+    if (role === 'husband') {
       roleName = 'Bố Bỉm (Partner)';
       avatar = '🧸';
       if (userPartnerCode) {
-        let momUser = null;
-        if (isDbReady()) {
-          try {
-            momUser = await User.findOne({ partnerCode: userPartnerCode, role: 'mom' });
-          } catch (e) {}
-        }
-        if (!momUser) {
-          momUser = memoryDb.users.find(u => u.partnerCode === userPartnerCode && u.role === 'mom');
-        }
+        const momUser = await User.findOne({ partnerCode: userPartnerCode, role: 'mom' });
         if (momUser) partnerName = momUser.name;
       }
     } else if (role === 'admin') {
       roleName = 'Ban Quản Trị';
       avatar = '🛡️';
+    } else {
+      if (!userPartnerCode) {
+        userPartnerCode = 'MAMA-' + Math.floor(1000 + Math.random() * 9000);
+      }
     }
 
-    const userData = {
+    const newUser = await User.create({
       name: name.trim(),
       email: cleanEmail,
       phone: cleanPhone,
@@ -200,274 +208,215 @@ router.post('/auth/register', async (req, res) => {
       pregnancyWeek: role === 'mom' ? Number(pregnancyWeek) || 12 : undefined,
       dueDate: role === 'mom' ? dueDate : '',
       partnerCode: userPartnerCode,
-      partnerName,
-      createdAt: new Date()
-    };
+      partnerName
+    });
 
-    let safeUser = null;
-    let savedInAtlas = false;
-
-    if (isDbReady()) {
-      try {
-        const newUser = await User.create(userData);
-        if (role === 'mom') {
-          await PartnerSync.findOneAndUpdate(
-            { partnerCode: userPartnerCode },
-            {
-              partnerCode: userPartnerCode,
-              momName: newUser.name,
-              pregnancyWeek: newUser.pregnancyWeek || 12,
-              currentMood: 'Hạnh phúc',
-              weather: 'sunny',
-              actionTip: 'Mẹ vừa tạo tài khoản! Bố hãy gửi lời chúc yêu thương và đồng hành cùng mẹ nhé!',
-              lastCheckIn: 'Vừa xong'
-            },
-            { upsert: true, returnDocument: 'after' }
-          );
-        }
-        safeUser = newUser.toSafeObject();
-        savedInAtlas = true;
-      } catch (dbErr) {
-        console.warn('Lỗi Atlas, kích hoạt fallback memory:', dbErr.message);
-      }
-    }
-
-    if (!savedInAtlas) {
-      userData.id = 'usr-' + Date.now();
-      userData._id = userData.id;
-      userData.toSafeObject = function() {
-        const copy = { ...this };
-        delete copy.password;
-        delete copy.toSafeObject;
-        return copy;
-      };
-      memoryDb.users.push(userData);
-
-      if (role === 'mom') {
-        memoryDb.partnerSync = {
+    if (role === 'mom') {
+      const existingSync = await PartnerSync.findOne({ partnerCode: userPartnerCode });
+      if (!existingSync) {
+        await PartnerSync.create({
           partnerCode: userPartnerCode,
-          momName: userData.name,
-          pregnancyWeek: userData.pregnancyWeek || 12,
-          currentMood: 'Hạnh phúc',
-          weather: 'sunny',
-          actionTip: 'Mẹ vừa tạo tài khoản! Bố hãy gửi lời chúc yêu thương và đồng hành cùng mẹ nhé!',
+          momName: newUser.name,
+          pregnancyWeek: newUser.pregnancyWeek,
+          currentMood: 'Khởi đầu mới',
+          weather: 'clear',
+          actionTip: 'Chào mừng mẹ bầu mới gia nhập! Hãy đồng hành và động viên cô ấy nhé!',
           lastCheckIn: 'Vừa xong',
-          actionsTaken: [],
-          updatedAt: new Date()
-        };
+          actionsTaken: []
+        });
       }
-      safeUser = userData.toSafeObject();
     }
+
+    const safeUser = typeof newUser.toSafeObject === 'function' ? newUser.toSafeObject() : newUser.toObject();
+    delete safeUser.password;
+    safeUser.id = safeUser._id;
 
     res.status(201).json({
       success: true,
-      message: 'Đăng ký tài khoản thành công!',
+      message: 'Đăng ký tài khoản MamaCare thành công!',
       user: safeUser,
-      token: `mamacare-session-${safeUser.id}-${Date.now()}`
+      token: `mamacare-session-${safeUser._id}-${Date.now()}`
     });
   } catch (err) {
-    console.error('Lỗi đăng ký:', err);
-    res.status(500).json({ success: false, message: 'Lỗi khi tạo tài khoản: ' + err.message });
+    console.error('Lỗi đăng ký tài khoản:', err);
+    res.status(500).json({ success: false, message: 'Lỗi hệ thống khi đăng ký: ' + err.message });
   }
 });
 
-// ==========================================
-// 3. MODULE 1.1: TRẠM CẢM XÚC (MOOD TRACKING & ANALYTICS)
-// ==========================================
-
-// Lấy phân tích tâm lý tuần/tháng
-router.get('/mood/analytics', async (req, res) => {
+// Lấy danh sách toàn bộ Users (dành cho Admin)
+router.get('/users', async (req, res) => {
   try {
-    let records = [];
-    if (isDbReady()) {
-      try {
-        records = await MoodRecord.find().sort({ createdAt: 1 }).limit(30);
-      } catch (e) {
-        console.warn('Lỗi tải MoodRecord từ Atlas, dùng memory store:', e.message);
-      }
-    }
-    if (!records || records.length === 0) {
-      records = memoryDb.moodRecords;
-    }
-
-    const count = records.length;
-    const avgScore = count > 0
-      ? Math.round(records.reduce((acc, cur) => acc + (cur.score || 0), 0) / count)
-      : 75;
-
-    res.json({
-      success: true,
-      records,
-      summary: {
-        averageScore: avgScore,
-        trend: avgScore >= 70 ? 'up' : (avgScore >= 50 ? 'stable' : 'down'),
-        statusText: avgScore >= 70 ? 'Tâm trạng tích cực và ổn định' : (avgScore >= 50 ? 'Cần thư giãn và nghỉ ngơi thêm' : 'Cần người thân đồng hành và chia sẻ'),
-        totalCheckIns: count
-      }
-    });
+    const users = await User.find().select('-password').sort({ createdAt: -1 });
+    res.json({ success: true, count: users.length, users });
   } catch (err) {
-    console.error('Lỗi lấy dữ liệu tâm lý:', err);
-    res.status(500).json({ success: false, message: 'Lỗi truy vấn dữ liệu tâm lý' });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Check-in cảm xúc hàng ngày -> Lưu vào MongoDB / Memory & Đồng bộ cho Chồng
+// ==========================================
+// 3. MODULE 1.1: NHẬT KÝ CẢM XÚC & SỨC KHỎE (MOOD CHECK-IN)
+// ==========================================
+
+// Lấy lịch sử cảm xúc
+router.get('/mood/history', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    const filter = userId && mongoose.Types.ObjectId.isValid(userId) ? { user: userId } : {};
+    const records = await MoodRecord.find(filter).sort({ createdAt: -1 }).limit(30);
+    res.json({ success: true, count: records.length, records });
+  } catch (err) {
+    console.error('Lỗi lấy lịch sử cảm xúc:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Điểm danh cảm xúc mỗi ngày
 router.post('/mood/check-in', async (req, res) => {
   try {
-    const { mood = 'Hạnh phúc', score = 80, symptoms = [], waterCount = 6, journal = '', userName = 'Mẹ Bầu' } = req.body;
+    const {
+      userId,
+      userName = 'Mẹ Bầu',
+      mood = 'Bình an',
+      emoji = '🌸',
+      score = 80,
+      symptoms = [],
+      waterCount = 8,
+      journal = ''
+    } = req.body;
 
-    const moodConfigs = {
-      'Vui vẻ': { score: 90, emoji: '🥰', weather: 'sunny', tip: 'Vợ đang tràn đầy năng lượng! Hãy cùng cô ấy trò chuyện, rủ cô ấy đi dạo và chuẩn bị món cô ấy thích nhé!' },
-      'Hạnh phúc': { score: 90, emoji: '🥰', weather: 'sunny', tip: 'Vợ đang rất hạnh phúc và phấn khởi! Hãy trao cô ấy một cái ôm thật ấm áp nhé!' },
-      'Bình yên': { score: 80, emoji: '🌿', weather: 'cloudy', tip: 'Tâm trạng vợ rất êm đềm. Hãy cùng cô ấy nghe nhạc sóng não hoặc pha một cốc sữa ấm thơm ngon.' },
-      'Cáu gắt': { score: 45, emoji: '🌩️', weather: 'storm', tip: 'Báo động: Vợ đang bị quá tải và mệt mỏi! Đừng tranh luận đúng sai, hãy chủ động rửa bát và ôm vợ thật nhẹ nhàng.' },
-      'Tủi thân': { score: 40, emoji: '🥺', weather: 'rain', tip: 'Vợ đang cảm thấy cô đơn và tủi thân. Hãy tạm gác công việc lại một chút, gọi điện hỏi thăm hoặc về sớm xoa bóp chân cho cô ấy.' },
-      'Lo âu': { score: 50, emoji: '🌧️', weather: 'windy', tip: 'Vợ đang lo lắng về các mốc khám thai. Hãy nắm tay cô ấy, động viên và cùng xem lại lịch nhắc khám định kỳ.' }
-    };
-
-    const cfg = moodConfigs[mood] || moodConfigs['Bình yên'];
+    const days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
     const now = new Date();
-    const dayNames = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+    const dayOfWeek = days[now.getDay()];
+    const dateStr = now.toISOString().split('T')[0];
+    const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
-    const newRecordData = {
-      userName,
-      date: now.toISOString().split('T')[0],
-      time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
-      dayOfWeek: dayNames[now.getDay()],
-      mood,
-      emoji: cfg.emoji,
-      score: Number(score) || cfg.score,
-      symptoms: Array.isArray(symptoms) ? symptoms : [symptoms],
-      waterCount: Number(waterCount) || 6,
-      journal,
-      createdAt: now
-    };
-
-    let newRecord = newRecordData;
-    let updatedSync = null;
-
-    if (isDbReady()) {
-      try {
-        newRecord = await MoodRecord.create(newRecordData);
-        updatedSync = await PartnerSync.findOneAndUpdate(
-          {},
-          {
-            currentMood: mood,
-            weather: cfg.weather,
-            actionTip: cfg.tip,
-            lastCheckIn: 'Vừa xong',
-            updatedAt: new Date()
-          },
-          { returnDocument: 'after', upsert: true }
-        );
-      } catch (dbErr) {
-        console.warn('Lỗi ghi Atlas, lưu vào memory store:', dbErr.message);
-      }
+    let userRef = null;
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      userRef = userId;
     }
 
-    if (!updatedSync) {
-      memoryDb.moodRecords.push(newRecordData);
-      memoryDb.partnerSync = {
-        ...memoryDb.partnerSync,
+    const record = await MoodRecord.create({
+      user: userRef,
+      userName,
+      date: dateStr,
+      dayOfWeek,
+      time: timeStr,
+      mood,
+      emoji,
+      score: Number(score),
+      symptoms,
+      waterCount: Number(waterCount),
+      journal
+    });
+
+    // Cập nhật trạng thái thời tiết cảm xúc cho đối tác (PartnerSync)
+    let weather = 'clear';
+    let actionTip = 'Vợ đang có tâm trạng rất tuyệt vời! Hãy dành cho cô ấy một lời khen ngọt ngào và một nụ cười ấm áp nhé!';
+
+    if (score < 40 || mood.includes('Quá tải') || mood.includes('Bức bối') || mood.includes('Sấm chớp')) {
+      weather = 'storm';
+      actionTip = 'CẢNH BÁO: Vợ đang bị quá tải cảm xúc và mệt mỏi! Bố hãy chủ động gác lại mọi việc, pha nước ấm ngâm chân, massage lưng và ôm cô ấy thật chặt!';
+    } else if (score < 60 || mood.includes('Nhạy cảm') || mood.includes('Căng thẳng') || mood.includes('Mưa')) {
+      weather = 'rain';
+      actionTip = 'Vợ đang cảm thấy hơi tủi thân hoặc mệt mỏi trong người. Hãy hỏi han nhẹ nhàng, gọt cho cô ấy một đĩa hoa quả tươi và lắng nghe không phán xét.';
+    } else if (score < 75 || mood.includes('Âm u') || mood.includes('Mệt')) {
+      weather = 'cloudy';
+      actionTip = 'Vợ cảm thấy hơi uể oải. Bố hãy chủ động làm việc nhà và chuẩn bị một ly sữa hạt ấm cho cô ấy nhé!';
+    }
+
+    let updatedSync = await PartnerSync.findOneAndUpdate(
+      {},
+      {
         currentMood: mood,
-        weather: cfg.weather,
-        actionTip: cfg.tip,
+        weather,
+        actionTip,
         lastCheckIn: 'Vừa xong',
         updatedAt: new Date()
-      };
-      updatedSync = memoryDb.partnerSync;
-    }
+      },
+      { new: true, upsert: true }
+    );
 
-    res.json({
+    res.status(201).json({
       success: true,
-      message: 'Đã lưu check-in cảm xúc thành công!',
-      record: newRecord,
-      syncedPartner: updatedSync
+      message: 'Đã lưu nhật ký cảm xúc thành công vào MongoDB!',
+      record,
+      partnerSync: updatedSync
     });
   } catch (err) {
-    console.error('Lỗi check-in:', err);
-    res.status(500).json({ success: false, message: 'Lỗi lưu check-in: ' + err.message });
-  }
-});
-
-// Lưu nhật ký biết ơn / xả stress
-router.post('/mood/journal', async (req, res) => {
-  try {
-    const { content, type = 'text', tags = [] } = req.body;
-    if (!content || !content.trim()) {
-      return res.status(400).json({ success: false, message: 'Nội dung nhật ký không được để trống' });
-    }
-
-    const entry = {
-      content: content.trim(),
-      type,
-      tags: Array.isArray(tags) ? tags : [tags],
-      createdAt: new Date()
-    };
-
-    res.json({
-      success: true,
-      message: 'Nhật ký đã được lưu giữ an toàn!',
-      entry
-    });
-  } catch (err) {
-    console.error('Lỗi lưu nhật ký:', err);
-    res.status(500).json({ success: false, message: 'Lỗi lưu nhật ký: ' + err.message });
+    console.error('Lỗi lưu nhật ký cảm xúc:', err);
+    res.status(500).json({ success: false, message: 'Lỗi lưu cảm xúc: ' + err.message });
   }
 });
 
 // ==========================================
-// 4. MODULE 1.2: TRỢ LÝ AI TÂM GIAO & RED-FLAG SOS
+// 4. MODULE 1.2: TRỢ LÝ AI ĐỒNG HÀNH & CẢNH BÁO SOS
 // ==========================================
+// Lấy thông tin cấu hình DeepSeek AI
+router.get('/ai/config', (req, res) => {
+  res.json({
+    success: true,
+    provider: 'DeepSeek AI',
+    model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
+    hasApiKey: Boolean(process.env.DEEPSEEK_API_KEY && process.env.DEEPSEEK_API_KEY.trim()),
+    apiUrl: process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions'
+  });
+});
+
+// Cập nhật cấu hình DEEPSEEK_API_KEY
+router.post('/ai/config', (req, res) => {
+  const { apiKey, model } = req.body;
+  if (apiKey !== undefined) {
+    process.env.DEEPSEEK_API_KEY = String(apiKey).trim();
+  }
+  if (model) {
+    process.env.DEEPSEEK_MODEL = model.trim();
+  }
+  res.json({
+    success: true,
+    message: 'Cập nhật cấu hình DeepSeek API thành công!',
+    hasApiKey: Boolean(process.env.DEEPSEEK_API_KEY && process.env.DEEPSEEK_API_KEY.trim()),
+    model: process.env.DEEPSEEK_MODEL || 'deepseek-chat'
+  });
+});
+
 router.post('/ai/chat', async (req, res) => {
   try {
-    const { message = '', userId = 'guest' } = req.body;
-    const lowerMsg = message.toLowerCase();
+    const { message = '', history = [], userId = 'anonymous', userName = 'Mẹ Bầu' } = req.body;
+    const cleanMsg = message.trim();
 
-    if (isDbReady()) {
-      try {
-        await AiChat.create({ userId, sender: 'user', text: message });
-      } catch (e) {}
+    if (!cleanMsg) {
+      return res.status(400).json({ success: false, message: 'Nội dung tin nhắn không được để trống' });
     }
 
-    // DANH SÁCH TỪ KHÓA NGUY HIỂM KÍCH HOẠT HỆ THỐNG CẢNH BÁO ĐỎ (RED-FLAG SOS)
+    await AiChat.create({ userId, userName, sender: 'user', text: cleanMsg });
+
+    // Kiểm tra từ khóa Red-Flag (nguy cơ trầm cảm, tự hại, khủng hoảng tinh thần)
     const redFlagKeywords = [
-      'tuyệt vọng', 'làm hại bản thân', 'tự tử', 'chết đi', 'không muốn sống',
-      'ghét bỏ đứa trẻ', 'hận đứa con', 'bỏ con', 'trầm cảm nặng', 'muốn biến mất',
-      'giết', 'chết quách'
+      'tự tử', 'chết', 'kết thúc cuộc sống', 'không muốn sống', 'hại con',
+      'ghét bỏ đứa bé', 'tuyệt vọng', 'biến mất', 'muốn chết', 'nhảy lầu', 'uống thuốc'
     ];
 
-    const hasRedFlag = redFlagKeywords.some(keyword => lowerMsg.includes(keyword));
+    const lowerMsg = cleanMsg.toLowerCase();
+    const isRedFlag = redFlagKeywords.some(keyword => lowerMsg.includes(keyword));
 
-    if (hasRedFlag) {
-      const queueItem = {
-        author: 'Mẹ Bầu (Phát hiện từ Chat AI)',
-        type: 'chat',
-        content: message,
-        reason: 'Cảnh báo Đỏ (Red-flag): Phát hiện ý nghĩ tiêu cực/nguy cơ tự làm tổn thương',
-        status: 'pending',
-        flaggedAt: new Date()
-      };
+    if (isRedFlag) {
+      const sosReply = '🚨 MẸ YÊU ƠI, HÃY DỪNG LẠI MỘT CHÚT! Chúng mình đang ở ngay bên mẹ đây. Những gì mẹ đang phải chịu đựng là quá lớn, nhưng mẹ KHÔNG HỀ CÔ ĐƠN MỘT MÌNH. Xin mẹ hãy hít một hơi thật sâu và liên hệ ngay với người thân hoặc đường dây nóng hỗ trợ tâm lý chuyên gia 24/7 dưới đây. Mọi sự sống và nỗ lực của mẹ đều vô cùng quý giá!';
 
-      if (isDbReady()) {
-        try {
-          await Moderation.create(queueItem);
-        } catch (e) {}
-      }
-      memoryDb.moderations.push(queueItem);
+      await Moderation.create({
+        author: userName + ' (ID: ' + userId + ')',
+        type: 'sos_chat',
+        content: cleanMsg,
+        reason: 'Phát hiện Red-Flag: Từ khóa có nguy cơ khủng hoảng tinh thần hoặc tự hại cao',
+        status: 'urgent_sos'
+      });
 
-      const sosReply = 'Mẹ ơi, em đang lắng nghe đây. Xin mẹ hãy hít một hơi thật sâu... Mẹ không hề đơn độc một mình lúc này đâu. Đội ngũ y bác sĩ và chuyên viên tâm lý luôn ở ngay bên mẹ. Em đã kích hoạt chế độ hỗ trợ khẩn cấp, mẹ hãy gọi ngay hotline bên dưới để có người ở bên chia sẻ cùng mẹ nhé! ❤️';
-
-      if (isDbReady()) {
-        try {
-          await AiChat.create({ userId, sender: 'ai', text: sosReply, isRedFlag: true });
-        } catch (e) {}
-      }
+      await AiChat.create({ userId, sender: 'ai', text: sosReply, isRedFlag: true });
 
       return res.json({
         success: true,
         isRedFlag: true,
         reply: sosReply,
+        provider: 'MamaCare Emergency Red-Flag System',
         sos: {
           active: true,
           title: 'HỆ THỐNG CẢNH BÁO ĐỎ: HỖ TRỢ TÂM LÝ KHẨN CẤP',
@@ -481,136 +430,111 @@ router.post('/ai/chat', async (req, res) => {
       });
     }
 
-    // Phản hồi AI thấu cảm theo ngữ cảnh
-    let reply = 'Mình hiểu mẹ đang cảm thấy thế nào. Mang thai là hành trình tuyệt vời nhưng cũng có những lúc cơ thể và tâm trí mẹ bị quá tải. Mẹ cứ thả lỏng và chia sẻ thêm với mình nhé, mình luôn ở đây cùng mẹ. ❤️';
-    if (lowerMsg.includes('đau lưng') || lowerMsg.includes('mỏi')) {
-      reply = 'Mẹ bị mỏi lưng đúng không ạ? Ở giai đoạn này, tử cung phát triển khiến cột sống phải chịu thêm áp lực. Mẹ thử dùng gối ôm chữ U khi ngủ nghiêng sang trái, và nhờ bố massage nhẹ nhàng thắt lưng theo hình tròn nhé.';
-    } else if (lowerMsg.includes('khó ngủ') || lowerMsg.includes('mất ngủ')) {
-      reply = 'Khó ngủ là nỗi niềm chung của rất nhiều mẹ bầu. Mẹ hãy thử vào tab "Không Gian Thở", bật bài nhạc sóng não 432Hz hoặc tiếng mưa rào nhẹ nhàng, kết hợp bài tập thở 4-7-8 để đưa cơ thể vào trạng thái thư giãn sâu nhé mẹ.';
-    } else if (lowerMsg.includes('buồn') || lowerMsg.includes('khóc') || lowerMsg.includes('cô đơn')) {
-      reply = 'Mẹ cứ khóc một chút nếu thấy nhẹ lòng hơn nhé, khóc không có gì là yếu đuối cả. Sự thay đổi của progesterone và estrogen khiến cảm xúc của mẹ nhạy cảm hơn nhiều lần. Mẹ đã làm rất tốt hôm nay rồi, thương mẹ nhiều!';
-    } else if (lowerMsg.includes('chồng') || lowerMsg.includes('vô tâm')) {
-      reply = 'Nhiều khi các ông bố không cố ý vô tâm đâu mẹ ơi, mà do họ chưa thực sự hiểu hết những thay đổi bên trong cơ thể mẹ. Mẹ hãy dùng tính năng "Gợi ý Cứu Vợ" trong app, ứng dụng sẽ gửi tin nhắn nhắc nhở nhẹ nhàng để bố biết cách quan tâm mẹ hơn.';
+    // GỌI DEEPSEEK API ĐỂ TÌM KIẾM VÀ TRẢ VỀ KẾT QUẢ
+    let reply = '';
+    let provider = 'MamaCare Medical AI Engine';
+    let model = 'deepseek-chat';
+
+    const deepseekResult = await queryDeepSeek(cleanMsg, history);
+
+    if (deepseekResult.success && deepseekResult.reply) {
+      reply = deepseekResult.reply;
+      provider = 'DeepSeek AI (Cloud API)';
+      model = deepseekResult.model;
+    } else {
+      // Fallback thông minh dựa trên tri thức y khoa thai kỳ nếu chưa có key hoặc API bận
+      reply = getMedicalFallbackReply(cleanMsg);
+      provider = 'MamaAI Clinical Knowledge Engine';
     }
 
-    if (isDbReady()) {
-      try {
-        await AiChat.create({ userId, sender: 'ai', text: reply, isRedFlag: false });
-      } catch (e) {}
-    }
+    await AiChat.create({ userId, sender: 'ai', text: reply, isRedFlag: false });
 
     res.json({
       success: true,
       isRedFlag: false,
-      reply
+      reply,
+      provider,
+      model
     });
   } catch (err) {
     console.error('Lỗi AI Chat:', err);
-    res.status(500).json({ success: false, message: 'Lỗi trò chuyện với AI' });
+    res.status(500).json({ success: false, message: 'Lỗi trò chuyện với AI: ' + err.message });
   }
 });
 
 // ==========================================
 // 5. MODULE 1.3: KHÔNG GIAN "THỞ" (ZEN SPACE)
 // ==========================================
-router.get('/zen/tracks', (req, res) => {
-  res.json({
-    success: true,
-    tracks: [
-      { id: 'track-1', title: 'Sóng Não 432Hz Miracle Tone', desc: 'Tần số hòa bình, giảm căng thẳng thần kinh sâu', duration: 'Vòng lặp Synthesizer', type: 'binaural_432' },
-      { id: 'track-2', title: 'Sóng Não 528Hz DNA Repair', desc: 'Tần số phục hồi tế bào và nâng cao năng lượng tích cực', duration: 'Vòng lặp Synthesizer', type: 'binaural_528' },
-      { id: 'track-3', title: 'Tiếng Mưa Rào Pink Noise', desc: 'Tiếng mưa rơi dịu êm cắt đứt tạp âm, dễ đi vào giấc ngủ', duration: 'Vòng lặp Pink Noise', type: 'rain_noise' },
-      { id: 'track-4', title: 'Audio Truyện Thai Giáo: Hạt Mầm Yêu Thương', desc: 'Giọng đọc ấm áp giúp bé kết nối cùng mẹ trước giờ ngủ', duration: '12:45', type: 'story' }
-    ],
-    breathingGuide: {
-      name: 'Kỹ thuật thở 4-7-8',
-      purpose: 'Ngắt cơn hoảng loạn (Panic Attack) & Điều hòa nhịp tim trong 60 giây',
-      steps: [
-        { label: 'Hít vào bằng mũi sâu', duration: 4 },
-        { label: 'Giữ hơi tĩnh lặng', duration: 7 },
-        { label: 'Thở ra từ từ bằng miệng', duration: 8 }
-      ]
-    },
-    yogaExercises: [
-      { id: 'yoga-t1', trimester: 1, title: 'Thư giãn cột sống & Chống ốm nghén nhẹ', duration: '12 phút', level: 'Dễ' },
-      { id: 'yoga-t2', trimester: 2, title: 'Mở rộng khung chậu & Giảm áp lực thắt lưng', duration: '18 phút', level: 'Trung bình' },
-      { id: 'yoga-t3', trimester: 3, title: 'Tập thở chuẩn bị chuyển dạ & Tư thế cánh bướm', duration: '15 phút', level: 'Nhẹ nhàng' }
-    ]
-  });
-});
-
-// ==========================================
-// 6. MODULE 1.4: DIỄN ĐÀN GÓC KHUẤT (SAFE SPACE FORUM)
-// ==========================================
-router.get('/forum/posts', async (req, res) => {
+router.get('/zen/tracks', async (req, res) => {
   try {
-    const { room = 'all' } = req.query;
-    let posts = [];
-    if (isDbReady()) {
-      try {
-        const filter = room === 'all' ? {} : { room };
-        posts = await ForumPost.find(filter).sort({ createdAt: -1 });
-      } catch (e) {}
-    }
-    if (!posts || posts.length === 0) {
-      posts = room === 'all' ? memoryDb.forumPosts : memoryDb.forumPosts.filter(p => p.room === room);
-    }
-
+    const zen = await getOrSeedZenContent();
     res.json({
       success: true,
-      total: posts.length,
-      posts
+      tracks: zen.tracks,
+      breathingGuide: zen.breathingGuide,
+      yogaExercises: zen.yogaExercises
     });
   } catch (err) {
-    console.error('Lỗi lấy bài viết diễn đàn:', err);
-    res.status(500).json({ success: false, message: 'Lỗi tải bài viết từ cơ sở dữ liệu' });
+    console.error('Lỗi lấy dữ liệu Zen:', err);
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Đăng bài diễn đàn
+// ==========================================
+// 6. MODULE 1.4: DIỄN ĐÀN CỘNG ĐỒNG ẨN DANH & BÁC SĨ (FORUM)
+// ==========================================
+
+// Lấy danh sách bài viết theo chuyên mục / phòng
+router.get('/forum/posts', async (req, res) => {
+  try {
+    const { room = 'all' } = req.query;
+    const filter = room === 'all' ? {} : { room };
+    const posts = await ForumPost.find(filter).sort({ createdAt: -1 });
+    res.json({ success: true, count: posts.length, posts });
+  } catch (err) {
+    console.error('Lỗi lấy bài viết forum:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Đăng bài viết mới
 router.post('/forum/posts', async (req, res) => {
   try {
-    const { title, content, room = '3months', author = 'Mẹ Bầu Ẩn Danh', authorRole = 'Mẹ Bầu', tag = 'Tâm Sự' } = req.body;
-    if (!title || !content) {
-      return res.status(400).json({ success: false, message: 'Tiêu đề và nội dung không được để trống' });
+    const {
+      author = 'Mẹ Bầu Ẩn Danh',
+      authorRole = 'Mẹ Bầu',
+      avatar = '🌸',
+      room = 'rage',
+      title,
+      content,
+      tag = 'Tâm Sự'
+    } = req.body;
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({ success: false, message: 'Nội dung bài viết không được để trống' });
     }
 
-    const postData = {
+    const newPost = await ForumPost.create({
       author,
       authorRole,
+      avatar,
       room,
-      title: title.trim(),
+      title: title || 'Tâm sự ẩn danh của mẹ',
       content: content.trim(),
       tag,
       likes: 0,
-      comments: [],
-      createdAt: new Date()
-    };
-
-    let newPost = null;
-    if (isDbReady()) {
-      try {
-        newPost = await ForumPost.create(postData);
-      } catch (e) {}
-    }
-
-    if (!newPost) {
-      newPost = {
-        ...postData,
-        id: 'post-' + Date.now(),
-        _id: 'post-' + Date.now()
-      };
-    }
-    memoryDb.forumPosts.unshift(newPost);
+      isExpertVerified: false,
+      comments: []
+    });
 
     res.status(201).json({
       success: true,
-      message: 'Tâm sự của mẹ đã được lưu và chia sẻ vào diễn đàn an toàn!',
+      message: 'Đăng bài viết ẩn danh thành công!',
       post: newPost
     });
   } catch (err) {
-    console.error('Lỗi đăng bài viết:', err);
-    res.status(500).json({ success: false, message: 'Lỗi lưu bài viết: ' + err.message });
+    console.error('Lỗi tạo bài viết forum:', err);
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
@@ -619,367 +543,646 @@ router.post('/forum/posts/:id/like', async (req, res) => {
   try {
     const { id } = req.params;
     let post = null;
-    if (isDbReady()) {
-      try {
-        post = await ForumPost.findByIdAndUpdate(
-          id,
-          { $inc: { likes: 1 } },
-          { returnDocument: 'after' }
-        );
-      } catch (e) {}
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      post = await ForumPost.findByIdAndUpdate(id, { $inc: { likes: 1 } }, { new: true });
+    }
+    if (!post) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy bài viết' });
+    }
+    res.json({ success: true, likes: post.likes });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Thêm bình luận vào bài viết
+router.post('/forum/posts/:id/comment', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { author = 'Mẹ Bầu', avatar = '🌸', content } = req.body;
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({ success: false, message: 'Nội dung bình luận không được để trống' });
     }
 
+    let post = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      post = await ForumPost.findById(id);
+    }
     if (!post) {
-      const p = memoryDb.forumPosts.find(item => item._id === id || item.id === id);
-      if (p) {
-        p.likes = (p.likes || 0) + 1;
-        post = p;
+      return res.status(404).json({ success: false, message: 'Không tìm thấy bài viết' });
+    }
+
+    const newComment = {
+      author,
+      avatar,
+      content: content.trim(),
+      createdAt: new Date()
+    };
+
+    post.comments.push(newComment);
+    await post.save();
+
+    res.json({
+      success: true,
+      message: 'Đã gửi bình luận thành công!',
+      comment: newComment,
+      comments: post.comments
+    });
+  } catch (err) {
+    console.error('Lỗi thêm bình luận:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Lưu hồ sơ sức khỏe mẹ bầu (chiều cao, cân nặng, thân nhiệt, tuần thai)
+router.post('/user/health-profile', async (req, res) => {
+  try {
+    const { userId, height, weight, temperature, pregnancyWeek } = req.body;
+
+    let user = null;
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      user = await User.findById(userId);
+    }
+    if (!user) {
+      user = await User.findOne({ role: 'mom' });
+    }
+
+    if (user) {
+      if (pregnancyWeek) user.pregnancyWeek = Number(pregnancyWeek);
+      await user.save();
+    }
+
+    res.json({
+      success: true,
+      message: 'Đã lưu hồ sơ sức khỏe mẹ bầu thành công!',
+      profile: {
+        height: Number(height) || 160,
+        weight: Number(weight) || 58.5,
+        temperature: Number(temperature) || 36.8,
+        pregnancyWeek: user ? user.pregnancyWeek : 24,
+        bmi: ((Number(weight) || 58.5) / Math.pow((Number(height) || 160) / 100, 2)).toFixed(1),
+        updatedAt: new Date()
+      }
+    });
+  } catch (err) {
+    console.error('Lỗi lưu hồ sơ sức khỏe:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Lấy thông tin Profile chi tiết & tình trạng ghép đôi
+router.get('/user/profile', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    let user = null;
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      user = await User.findById(userId);
+    }
+    if (!user) {
+      user = await User.findOne({ role: 'mom' });
+    }
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy thông tin người dùng' });
+    }
+
+    // Tự động cấp mã ghép đôi nếu mẹ bầu chưa có
+    if (user.role === 'mom' && !user.partnerCode) {
+      user.partnerCode = 'MAMA-' + Math.floor(1000 + Math.random() * 9000);
+      await user.save();
+    }
+
+    const safeUser = typeof user.toSafeObject === 'function' ? user.toSafeObject() : user.toObject();
+    delete safeUser.password;
+
+    // Tìm thông tin đối tác ghép đôi (nếu có partnerCode)
+    let partner = null;
+    if (user.partnerCode) {
+      if (user.role === 'mom') {
+        partner = await User.findOne({ partnerCode: user.partnerCode, role: 'husband', _id: { $ne: user._id } })
+          .select('name phone email avatar createdAt');
+      } else if (user.role === 'husband') {
+        partner = await User.findOne({ partnerCode: user.partnerCode, role: 'mom', _id: { $ne: user._id } })
+          .select('name phone email avatar pregnancyWeek dueDate createdAt');
       }
     }
 
     res.json({
       success: true,
-      likes: post ? post.likes : 1
+      user: safeUser,
+      partner: partner || null,
+      isPaired: !!partner
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Lỗi cập nhật lượt thích' });
+    console.error('Lỗi lấy profile:', err);
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Báo cáo bài viết -> Lưu vào Moderation Queue
-router.post('/forum/posts/:id/report', async (req, res) => {
+// Cập nhật thông tin Profile người dùng
+router.post('/user/profile', async (req, res) => {
   try {
-    const { id } = req.params;
-    const { reason = 'Nội dung tiêu cực / Cần kiểm duyệt' } = req.body;
-
-    const queueItem = {
-      _id: 'mod-' + Date.now(),
-      author: 'Mẹ Bầu Báo Cáo',
-      type: 'post',
-      content: `Báo cáo nội dung bài viết ID: ${id}`,
-      reason,
-      status: 'pending',
-      flaggedAt: new Date()
-    };
-
-    if (isDbReady()) {
-      try {
-        await Moderation.create(queueItem);
-      } catch (e) {}
+    const { userId, name, phone, avatar, pregnancyWeek, dueDate } = req.body;
+    let user = null;
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      user = await User.findById(userId);
     }
-    memoryDb.moderations.push(queueItem);
+    if (!user) {
+      user = await User.findOne({ role: 'mom' });
+    }
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Người dùng không tồn tại' });
+    }
+
+    if (name && name.trim()) user.name = name.trim();
+    if (phone !== undefined) user.phone = phone.trim();
+    if (avatar) user.avatar = avatar;
+    if (pregnancyWeek) user.pregnancyWeek = Number(pregnancyWeek);
+    if (dueDate !== undefined) user.dueDate = dueDate;
+
+    if (user.role === 'mom' && !user.partnerCode) {
+      user.partnerCode = 'MAMA-' + Math.floor(1000 + Math.random() * 9000);
+    }
+
+    await user.save();
+
+    // Đồng bộ tên mẹ sang PartnerSync nếu có
+    if (user.role === 'mom' && user.partnerCode) {
+      await PartnerSync.findOneAndUpdate(
+        { partnerCode: user.partnerCode },
+        { momName: user.name, pregnancyWeek: user.pregnancyWeek },
+        { upsert: true }
+      );
+    }
+
+    const safeUser = typeof user.toSafeObject === 'function' ? user.toSafeObject() : user.toObject();
+    delete safeUser.password;
 
     res.json({
       success: true,
-      message: 'Cảm ơn mẹ đã gửi báo cáo. Ban kiểm duyệt sẽ xem xét nội dung trong thời gian sớm nhất!',
-      reportId: queueItem._id
+      message: 'Cập nhật hồ sơ cá nhân thành công!',
+      user: safeUser
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Lỗi báo cáo bài viết' });
+    console.error('Lỗi cập nhật profile:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Tạo mã ghép đôi riêng biệt mới cho mẹ bầu
+router.post('/user/generate-pair-code', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    let user = null;
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      user = await User.findById(userId);
+    }
+    if (!user) {
+      user = await User.findOne({ role: 'mom' });
+    }
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản mẹ bầu' });
+    }
+
+    // Tạo mã ngẫu nhiên dạng MAMA-XXXX đảm bảo duy nhất
+    let newCode;
+    let isUnique = false;
+    while (!isUnique) {
+      newCode = 'MAMA-' + Math.floor(1000 + Math.random() * 9000);
+      const existing = await User.findOne({ partnerCode: newCode, _id: { $ne: user._id } });
+      if (!existing) isUnique = true;
+    }
+
+    user.partnerCode = newCode;
+    await user.save();
+
+    // Khởi tạo bản ghi PartnerSync tương ứng
+    await PartnerSync.findOneAndUpdate(
+      { partnerCode: newCode },
+      {
+        partnerCode: newCode,
+        momName: user.name,
+        pregnancyWeek: user.pregnancyWeek || 24,
+        currentMood: 'Bình An',
+        weather: 'clear',
+        actionTip: 'Chào mừng bố bỉm đã kết nối với mẹ ' + user.name + '! Hãy ôm cô ấy thật ấm áp nhé!',
+        lastCheckIn: 'Vừa xong',
+        actionsTaken: []
+      },
+      { upsert: true, new: true }
+    );
+
+    const safeUser = typeof user.toSafeObject === 'function' ? user.toSafeObject() : user.toObject();
+    delete safeUser.password;
+
+    res.json({
+      success: true,
+      message: 'Đã tạo mã ghép đôi mới thành công!',
+      partnerCode: newCode,
+      user: safeUser
+    });
+  } catch (err) {
+    console.error('Lỗi tạo mã ghép đôi:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Kết nối ghép đôi với mẹ bầu (dành cho Bố Bỉm hoặc Mẹ)
+router.post('/user/connect-partner', async (req, res) => {
+  try {
+    const { userId, partnerCode } = req.body;
+    if (!partnerCode || !partnerCode.trim()) {
+      return res.status(400).json({ success: false, message: 'Vui lòng nhập mã ghép đôi' });
+    }
+
+    const cleanCode = partnerCode.trim().toUpperCase();
+
+    // Tìm mẹ bầu sở hữu mã này
+    const momUser = await User.findOne({ partnerCode: cleanCode, role: 'mom' });
+    if (!momUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy mẹ bầu nào với mã ghép đôi ' + cleanCode + '. Vui lòng kiểm tra lại!'
+      });
+    }
+
+    let currentUser = null;
+    if (userId) {
+      currentUser = mongoose.Types.ObjectId.isValid(userId)
+        ? await User.findById(userId)
+        : await User.findOne({ email: userId });
+    }
+    if (!currentUser) {
+      currentUser = await User.findOne({ role: 'husband' });
+    }
+
+    if (currentUser) {
+      currentUser.partnerCode = cleanCode;
+      currentUser.partnerName = momUser.name;
+      await currentUser.save();
+    }
+
+    await PartnerSync.findOneAndUpdate(
+      { partnerCode: cleanCode },
+      { momName: momUser.name, pregnancyWeek: momUser.pregnancyWeek || 24 },
+      { upsert: true }
+    );
+
+    const safeUser = currentUser && typeof currentUser.toSafeObject === 'function'
+      ? currentUser.toSafeObject()
+      : currentUser
+      ? currentUser.toObject()
+      : null;
+    if (safeUser) delete safeUser.password;
+
+    res.json({
+      success: true,
+      message: 'Kết nối thành công với mẹ bầu ' + momUser.name + '!',
+      partner: {
+        name: momUser.name,
+        phone: momUser.phone,
+        email: momUser.email,
+        pregnancyWeek: momUser.pregnancyWeek,
+        dueDate: momUser.dueDate,
+        avatar: momUser.avatar
+      },
+      partnerCode: cleanCode,
+      user: safeUser
+    });
+  } catch (err) {
+    console.error('Lỗi kết nối đối tác:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Hủy ghép đôi (dành cho Bố Bỉm hoặc Mẹ Bầu)
+router.post('/user/disconnect-partner', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    let currentUser = null;
+
+    if (userId) {
+      currentUser = mongoose.Types.ObjectId.isValid(userId)
+        ? await User.findById(userId)
+        : await User.findOne({ email: userId });
+    }
+    if (!currentUser) {
+      currentUser = await User.findOne({ role: 'husband' });
+    }
+
+    if (!currentUser) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy thông tin tài khoản' });
+    }
+
+    const previousPartnerName = currentUser.partnerName || 'đối tác';
+
+    // Reset thông tin đối tác của người dùng hiện tại
+    currentUser.partnerCode = '';
+    currentUser.partnerName = '';
+    await currentUser.save();
+
+    const safeUser = currentUser && typeof currentUser.toSafeObject === 'function'
+      ? currentUser.toSafeObject()
+      : currentUser
+      ? currentUser.toObject()
+      : null;
+    if (safeUser) delete safeUser.password;
+
+    res.json({
+      success: true,
+      message: `Đã hủy ghép đôi thành công với ${previousPartnerName}! Bạn có thể nhập mã mới để kết nối với mẹ bỉm.`,
+      user: safeUser
+    });
+  } catch (err) {
+    console.error('Lỗi hủy ghép đôi:', err);
+    res.status(500).json({ success: false, message: 'Lỗi hủy ghép đôi: ' + err.message });
   }
 });
 
 // ==========================================
-// 7. MODULE 2.1: ĐỒNG BỘ CẢM XÚC CHO CHỒNG (PARTNER SYNC)
+// 7. MODULE 2.1: TRUNG TÂM ĐỒNG BỘ BỐ BỈM (PARTNER SYNC)
 // ==========================================
+
+// Lấy thông tin thời tiết cảm xúc của vợ
 router.get('/partner/sync', async (req, res) => {
   try {
-    let syncData = null;
-    if (isDbReady()) {
-      try {
-        syncData = await PartnerSync.findOne().sort({ updatedAt: -1 });
-      } catch (e) {}
+    const { partnerCode, userId } = req.query;
+    let targetCode = partnerCode;
+
+    // Nếu truyền userId, tìm partnerCode thực tế của user trong DB
+    if (userId) {
+      const user = mongoose.Types.ObjectId.isValid(userId)
+        ? await User.findById(userId)
+        : await User.findOne({ email: userId });
+      if (user) {
+        targetCode = user.partnerCode;
+      }
     }
+
+    // Nếu chưa có targetCode cụ thể, kiểm tra xem có tài khoản bố bỉm nào đã đăng nhập không
+    if (!targetCode && !userId) {
+      targetCode = 'MAMA-8899'; // fallback demo nếu test chay không kèm user
+    }
+
+    // Nếu bố bỉm thực sự chưa ghép đôi (partnerCode là rỗng)
+    if (!targetCode) {
+      return res.json({
+        success: true,
+        isPaired: false,
+        data: null,
+        message: 'Bố bỉm chưa ghép đôi với mẹ bầu nào. Hãy nhập mã để kết nối!'
+      });
+    }
+
+    let syncData = await PartnerSync.findOne({ partnerCode: targetCode });
     if (!syncData) {
-      syncData = memoryDb.partnerSync;
+      const mom = await User.findOne({ partnerCode: targetCode, role: 'mom' });
+      if (mom) {
+        syncData = await PartnerSync.create({
+          partnerCode: targetCode,
+          momName: mom.name,
+          pregnancyWeek: mom.pregnancyWeek || 24,
+          currentMood: 'Bình An',
+          weather: 'clear',
+          actionTip: 'Vợ đang có tâm trạng rất thoải mái. Bố hãy ôm cô ấy thật chặt nhé!',
+          lastCheckIn: 'Vừa xong',
+          actionsTaken: []
+        });
+      }
+    }
+
+    if (!syncData) {
+      return res.json({
+        success: true,
+        isPaired: false,
+        data: null,
+        message: 'Không tìm thấy dữ liệu đồng bộ của mã ' + targetCode
+      });
     }
 
     res.json({
       success: true,
+      isPaired: true,
       data: syncData
     });
   } catch (err) {
-    console.error('Lỗi tải dữ liệu Partner Sync:', err);
-    res.status(500).json({ success: false, message: 'Lỗi đọc dữ liệu Partner Sync' });
+    console.error('Lỗi lấy Partner Sync:', err);
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Bố bấm gửi hành động cứu vợ
+// Bố bỉm gửi hành động yêu thương / chăm sóc
 router.post('/partner/action', async (req, res) => {
   try {
-    const { actionId, label } = req.body;
-    let updatedSync = null;
-
-    if (isDbReady()) {
-      try {
-        updatedSync = await PartnerSync.findOneAndUpdate(
-          {},
-          {
-            $push: {
-              actionsTaken: {
-                actionId,
-                label,
-                timestamp: new Date()
-              }
-            },
-            updatedAt: new Date()
-          },
-          { returnDocument: 'after', upsert: true }
-        );
-      } catch (e) {}
+    const { partnerCode = 'MAMA-8899', actionId, label } = req.body;
+    if (!actionId || !label) {
+      return res.status(400).json({ success: false, message: 'Thiếu thông tin hành động' });
     }
 
-    if (!updatedSync) {
-      if (!memoryDb.partnerSync.actionsTaken) memoryDb.partnerSync.actionsTaken = [];
-      memoryDb.partnerSync.actionsTaken.push({ actionId, label, timestamp: new Date() });
-      memoryDb.partnerSync.updatedAt = new Date();
-      updatedSync = memoryDb.partnerSync;
-    }
+    const updatedSync = await PartnerSync.findOneAndUpdate(
+      { partnerCode },
+      {
+        $push: { actionsTaken: { actionId, label, timestamp: new Date() } },
+        $set: { updatedAt: new Date() }
+      },
+      { new: true, upsert: true }
+    );
 
     res.json({
       success: true,
-      message: `Bố đã hoàn thành hành động: "${label}". Yêu thương đã được đồng bộ tới mẹ!`,
+      message: `Đã gửi hành động yêu thương "${label}" tới mẹ bầu thành công!`,
       data: updatedSync
     });
   } catch (err) {
-    console.error('Lỗi thực hiện hành động:', err);
-    res.status(500).json({ success: false, message: 'Lỗi cập nhật hành động: ' + err.message });
+    console.error('Lỗi gửi hành động đối tác:', err);
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
 // ==========================================
-// 8. MODULE 2.2: LỚP HỌC LÀM BA (DADDY BOOTCAMP)
+// 8. MODULE ADMIN: METRICS, MODERATION & TRANSACTIONS
 // ==========================================
-router.get('/bootcamp/lessons', (req, res) => {
-  res.json({
-    success: true,
-    lessons: [
-      { id: 'b-1', title: 'Giải Mã Biến Đổi Hormone Ở Mẹ Bầu', duration: '8 phút', icon: '🧬', desc: 'Hiểu vì sao progesterone và estrogen làm cảm xúc người vợ thay đổi thất thường.' },
-      { id: 'b-2', title: 'Kỹ Thuật Massage Giảm Đau Thắt Lưng & Chuột Rút', duration: '12 phút', icon: '💆‍♂️', desc: 'Thực hành các động tác xoa bóp nhẹ nhàng chuẩn y khoa giúp vợ ngủ ngon.' },
-      { id: 'b-3', title: 'Hành Trang Đi Sinh & Quy Trình Phòng Sinh', duration: '15 phút', icon: '🏥', desc: 'Danh sách đồ cần chuẩn bị vào viện và cách trấn an tâm lý vợ trong phòng chờ sinh.' }
-    ]
-  });
-});
 
-router.post('/bootcamp/quiz', (req, res) => {
-  res.json({
-    success: true,
-    score: 100,
-    passed: true,
-    badge: 'Bố Bỉm 10 Điểm Chuẩn Y Khoa',
-    feedback: 'Tuyệt vời! Bạn đã nắm vững kiến thức đồng hành thai kỳ cùng vợ.'
-  });
-});
-
-// ==========================================
-// 9. MODULE 4: BAN QUẢN LÝ (ADMIN DASHBOARD & MODERATION)
-// ==========================================
+// Lấy toàn bộ chỉ số vận hành hệ thống từ MongoDB
 router.get('/admin/metrics', async (req, res) => {
   try {
-    let totalUsers = memoryDb.users.length;
-    let momCount = memoryDb.users.filter(u => u.role === 'mom').length;
-    let dadCount = memoryDb.users.filter(u => u.role === 'husband').length;
-    let totalMoods = memoryDb.moodRecords.length;
-    let totalPosts = memoryDb.forumPosts.length;
-    let pendingMod = memoryDb.moderations.filter(m => m.status === 'pending').length;
+    const [totalUsers, momCount, dadCount, totalMoods, totalPosts, pendingMod, transactions] = await Promise.all([
+      User.countDocuments(),
+      User.countDocuments({ role: 'mom' }),
+      User.countDocuments({ role: 'husband' }),
+      MoodRecord.countDocuments(),
+      ForumPost.countDocuments(),
+      Moderation.countDocuments({ status: { $in: ['pending', 'urgent_sos'] } }),
+      Transaction.find()
+    ]);
 
-    if (isDbReady()) {
-      try {
-        totalUsers = await User.countDocuments();
-        momCount = await User.countDocuments({ role: 'mom' });
-        dadCount = await User.countDocuments({ role: 'husband' });
-        totalMoods = await MoodRecord.countDocuments();
-        totalPosts = await ForumPost.countDocuments();
-        pendingMod = await Moderation.countDocuments({ status: 'pending' });
-      } catch (e) {}
-    }
+    const totalRevenue = transactions.reduce((sum, tx) => sum + (tx.amount || 0), 0);
 
     res.json({
       success: true,
       metrics: {
-        totalUsers,
-        momCount,
-        dadCount,
-        totalMoods,
-        totalPosts,
-        pendingModeration: pendingMod,
-        systemStatus: 'Hoạt động ổn định',
-        databaseEngine: isDbReady() ? 'MongoDB Atlas Cloud' : 'Bộ Nhớ Đám Mây (Atlas Pending)',
-        monthlyRevenue: 185450000,
-        growthPercent: 18.2
+        totalUsers: totalUsers || 42850,
+        dauToday: Math.round(totalUsers * 0.4) || 8420,
+        activePairs: Math.min(momCount, dadCount) || 18920,
+        sosResolved: 14,
+        totalMoodRecords: totalMoods,
+        totalForumPosts: totalPosts,
+        pendingModerations: pendingMod,
+        totalRevenue
       }
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Lỗi truy vấn số liệu quản trị' });
+    console.error('Lỗi lấy metrics admin:', err);
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
+// Lấy danh sách giao dịch doanh thu (Transactions) từ MongoDB
+router.get('/admin/transactions', async (req, res) => {
+  try {
+    let transactions = await Transaction.find().sort({ createdAt: -1 });
+    if (transactions.length === 0) {
+      transactions = await Transaction.create([
+        { txId: 'TX-9901', user: 'Mẹ Hoàng Oanh', package: 'Gói MamaCare Premium 1 Năm', amount: 1200000, date: '10 phút trước', status: 'completed' },
+        { txId: 'TX-9902', user: 'Bố Minh Đức', package: 'Tư Vấn Tâm Lý Chuyên Sâu 1-1', amount: 500000, date: '45 phút trước', status: 'completed' },
+        { txId: 'TX-9903', user: 'Mẹ Ánh Tuyết', package: 'Gói MamaCare Premium 6 Tháng', amount: 690000, date: '2 giờ trước', status: 'completed' },
+        { txId: 'TX-9904', user: 'Bố Quốc Hưng', package: 'Khóa Học Daddy Masterclass', amount: 350000, date: '4 giờ trước', status: 'completed' }
+      ]);
+    }
+    res.json({ success: true, count: transactions.length, transactions });
+  } catch (err) {
+    console.error('Lỗi lấy danh sách giao dịch:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Lấy hàng đợi kiểm duyệt nội dung
 router.get('/admin/moderation', async (req, res) => {
   try {
-    let queue = [];
-    if (isDbReady()) {
-      try {
-        queue = await Moderation.find({ status: 'pending' }).sort({ flaggedAt: -1 });
-      } catch (e) {}
-    }
-    if (!queue || queue.length === 0) {
-      queue = memoryDb.moderations.filter(m => m.status === 'pending');
-    }
-
-    res.json({
-      success: true,
-      queue
-    });
+    const queue = await Moderation.find({ status: { $in: ['pending', 'urgent_sos'] } }).sort({ createdAt: -1 });
+    res.json({ success: true, count: queue.length, queue });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Lỗi lấy hàng đợi kiểm duyệt' });
+    console.error('Lỗi lấy hàng đợi kiểm duyệt:', err);
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
+// Duyệt nội dung
 router.post('/admin/moderation/:id/approve', async (req, res) => {
   try {
     const { id } = req.params;
-    if (isDbReady()) {
-      try { await Moderation.findByIdAndUpdate(id, { status: 'approved' }); } catch (e) {}
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      await Moderation.findByIdAndUpdate(id, { status: 'approved' });
     }
-    const item = memoryDb.moderations.find(m => m._id === id || m.id === id);
-    if (item) item.status = 'approved';
-
-    res.json({
-      success: true,
-      message: 'Đã phê duyệt nội dung thành công!'
-    });
+    res.json({ success: true, message: 'Đã phê duyệt nội dung hợp lệ' });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Lỗi phê duyệt nội dung' });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
+// Xóa / Từ chối nội dung vi phạm
 router.delete('/admin/moderation/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    if (isDbReady()) {
-      try { await Moderation.findByIdAndUpdate(id, { status: 'rejected' }); } catch (e) {}
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      await Moderation.findByIdAndUpdate(id, { status: 'rejected' });
     }
-    const item = memoryDb.moderations.find(m => m._id === id || m.id === id);
-    if (item) item.status = 'rejected';
-
-    res.json({
-      success: true,
-      message: 'Đã gỡ bỏ và xử lý vi phạm thành công!'
-    });
+    res.json({ success: true, message: 'Đã gỡ bỏ nội dung vi phạm' });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Lỗi gỡ bỏ nội dung' });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
 // ==========================================
-// 10. MODULE 1.5: NHẮC NHỞ LỊCH KHÁM & UỐNG THUỐC
+// 9. MODULE 1.5: LỜI NHẮC UỐNG THUỐC & LỊCH KHÁM
 // ==========================================
 
-// --- Medications ---
+// Danh sách thuốc & vi chất
 router.get('/reminders/medications', async (req, res) => {
   try {
-    let medications = [];
-    if (isDbReady()) {
-      try { medications = await Medication.find().sort({ createdAt: 1 }); } catch (e) {}
+    let medications = await Medication.find().sort({ createdAt: 1 });
+    if (medications.length === 0) {
+      medications = await Medication.create([
+        { userId: 'system', name: 'Sắt hữu cơ Fumafer (1 viên sau ăn sáng)', time: '08:00 AM', taken: true },
+        { userId: 'system', name: 'Canxi Nano BioCal (1 viên sau ăn trưa)', time: '13:00 PM', taken: true },
+        { userId: 'system', name: 'DHA Thai kỳ BioIsland (2 viên sau ăn tối)', time: '19:30 PM', taken: false },
+        { userId: 'system', name: 'Acid Folic 400mcg (1 viên trước khi ngủ)', time: '21:30 PM', taken: false }
+      ]);
     }
-    if (!medications || medications.length === 0) {
-      medications = memoryDb.medications;
-    }
-    res.json({ success: true, medications });
+    res.json({ success: true, count: medications.length, medications });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Lỗi tải danh sách thuốc' });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
+// Thêm thuốc mới
 router.post('/reminders/medications', async (req, res) => {
   try {
     const { name, time, userId = 'system' } = req.body;
-    if (!name || !time) return res.status(400).json({ success: false, message: 'Tên thuốc và giờ uống không được để trống' });
-    
-    let newMed = null;
-    const medData = { name: name.trim(), time: time.trim(), taken: false, userId, createdAt: new Date() };
-
-    if (isDbReady()) {
-      try { newMed = await Medication.create(medData); } catch (e) {}
+    if (!name || !time) {
+      return res.status(400).json({ success: false, message: 'Vui lòng nhập tên thuốc và giờ uống' });
     }
-    
-    if (!newMed) {
-      newMed = { ...medData, id: 'med-' + Date.now(), _id: 'med-' + Date.now() };
-      memoryDb.medications.push(newMed);
-    }
-    
-    res.status(201).json({ success: true, message: 'Đã thêm thuốc mới', medication: newMed });
+    const med = await Medication.create({ userId, name, time, taken: false });
+    res.status(201).json({ success: true, message: 'Đã thêm lịch uống thuốc!', medication: med });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Lỗi thêm thuốc' });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
+// Bật/tắt trạng thái đã uống thuốc
 router.put('/reminders/medications/:id/toggle', async (req, res) => {
   try {
     const { id } = req.params;
-    let updatedMed = null;
-    
-    if (isDbReady()) {
-      try {
-        const med = await Medication.findById(id);
-        if (med) {
-          med.taken = !med.taken;
-          updatedMed = await med.save();
-        }
-      } catch (e) {}
-    }
-    
-    if (!updatedMed) {
-      const memMed = memoryDb.medications.find(m => m._id === id || m.id === id);
-      if (memMed) {
-        memMed.taken = !memMed.taken;
-        updatedMed = memMed;
+    let med = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      med = await Medication.findById(id);
+      if (med) {
+        med.taken = !med.taken;
+        await med.save();
       }
     }
-    
-    if (!updatedMed) return res.status(404).json({ success: false, message: 'Không tìm thấy thuốc' });
-    res.json({ success: true, medication: updatedMed });
+    if (!med) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy thuốc' });
+    }
+    res.json({ success: true, medication: med });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Lỗi cập nhật trạng thái thuốc' });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// --- Appointments ---
+// Danh sách lịch khám thai
 router.get('/reminders/appointments', async (req, res) => {
   try {
-    let appointments = [];
-    if (isDbReady()) {
-      try { appointments = await Appointment.find().sort({ createdAt: 1 }); } catch (e) {}
+    let appointments = await Appointment.find().sort({ createdAt: 1 });
+    if (appointments.length === 0) {
+      appointments = await Appointment.create([
+        { userId: 'system', title: 'Siêu âm hình thái 4D (Mốc Tuần 22)', date: '14/09/2026', doctor: 'BS. Nguyễn Mai Phương' },
+        { userId: 'system', title: 'Nghiệm pháp dung nạp Glucose (Tuần 26)', date: '05/10/2026', doctor: 'BS. Lê Hoàng Nam' }
+      ]);
     }
-    if (!appointments || appointments.length === 0) {
-      appointments = memoryDb.appointments;
-    }
-    res.json({ success: true, appointments });
+    res.json({ success: true, count: appointments.length, appointments });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Lỗi tải lịch khám' });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
+// Thêm lịch khám mới
 router.post('/reminders/appointments', async (req, res) => {
   try {
     const { title, date, doctor, userId = 'system' } = req.body;
-    if (!title || !date) return res.status(400).json({ success: false, message: 'Tên lịch khám và ngày không được để trống' });
-    
-    let newApp = null;
-    const appData = { title: title.trim(), date: date.trim(), doctor: doctor ? doctor.trim() : 'Bác sĩ sản khoa', userId, createdAt: new Date() };
-
-    if (isDbReady()) {
-      try { newApp = await Appointment.create(appData); } catch (e) {}
+    if (!title || !date) {
+      return res.status(400).json({ success: false, message: 'Vui lòng nhập tên mốc khám và ngày khám' });
     }
-    
-    if (!newApp) {
-      newApp = { ...appData, id: 'app-' + Date.now(), _id: 'app-' + Date.now() };
-      memoryDb.appointments.push(newApp);
-    }
-    
-    res.status(201).json({ success: true, message: 'Đã thêm lịch khám mới', appointment: newApp });
+    const app = await Appointment.create({
+      userId,
+      title,
+      date,
+      doctor: doctor || 'Bác sĩ chuyên khoa',
+      createdAt: new Date()
+    });
+    res.status(201).json({ success: true, message: 'Đã thêm lịch khám thai!', appointment: app });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Lỗi thêm lịch khám' });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 

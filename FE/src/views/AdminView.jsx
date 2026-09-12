@@ -10,31 +10,8 @@ export default function AdminView() {
     sosResolved: 14
   });
 
-  const [moderationQueue, setModerationQueue] = useState([
-    {
-      id: 'mod-1',
-      author: 'Ẩn danh #9182',
-      title: 'Bán thuốc bổ xách tay cam kết sinh con trai 100%',
-      reason: 'Quảng cáo sai sự thật / Buôn bán trái phép',
-      status: 'pending',
-      content: 'Nhắn tin Zalo 09xxxx để mua thuốc thảo dược gia truyền đảm bảo sinh con trai...'
-    },
-    {
-      id: 'mod-2',
-      author: 'Ẩn danh #4412',
-      title: 'Em mệt quá, em ghét cái thai này, em chỉ muốn biến mất...',
-      reason: 'Cảnh báo Đỏ: Nguy cơ trầm cảm thai kỳ nặng',
-      status: 'urgent_sos',
-      content: 'Mọi người ai cũng vô tâm, em không muốn tiếp tục nữa, em cảm thấy đứa trẻ làm hỏng cuộc đời em...'
-    }
-  ]);
-
-  const [transactions, setTransactions] = useState([
-    { id: 'TX-9901', user: 'Mẹ Hoàng Oanh', package: 'Gói MamaCare Premium 1 Năm', amount: 1200000, date: '10 phút trước' },
-    { id: 'TX-9902', user: 'Bố Minh Đức', package: 'Tư Vấn Tâm Lý Chuyên Sâu 1-1', amount: 500000, date: '45 phút trước' },
-    { id: 'TX-9903', user: 'Mẹ Ánh Tuyết', package: 'Gói MamaCare Premium 6 Tháng', amount: 690000, date: '2 giờ trước' },
-    { id: 'TX-9904', user: 'Bố Quốc Hưng', package: 'Khóa Học Daddy Masterclass', amount: 350000, date: '4 giờ trước' }
-  ]);
+  const [moderationQueue, setModerationQueue] = useState([]);
+  const [transactions, setTransactions] = useState([]);
 
   const userGrowthChartRef = useRef(null);
   const communityMoodChartRef = useRef(null);
@@ -45,7 +22,10 @@ export default function AdminView() {
       if (res && res.metrics) setMetrics(res.metrics);
     });
     MamaApi.getModerationQueue().then(res => {
-      if (res && res.queue && res.queue.length > 0) setModerationQueue(res.queue);
+      if (res && res.queue) setModerationQueue(res.queue);
+    });
+    MamaApi.getTransactions().then(res => {
+      if (res && res.transactions) setTransactions(res.transactions);
     });
 
     // Vẽ biểu đồ Chart.js
@@ -108,14 +88,14 @@ export default function AdminView() {
 
   const handleApprove = async (id) => {
     await MamaApi.approveModeration(id);
-    setModerationQueue(prev => prev.filter(item => item.id !== id));
+    setModerationQueue(prev => prev.filter(item => item.id !== id && item._id !== id));
     alert('Đã duyệt bài viết thành công!');
   };
 
   const handleDelete = async (id) => {
     if (confirm('Bạn có chắc chắn muốn xóa bài viết vi phạm này?')) {
       await MamaApi.deleteModeration(id);
-      setModerationQueue(prev => prev.filter(item => item.id !== id));
+      setModerationQueue(prev => prev.filter(item => item.id !== id && item._id !== id));
       alert('Đã gỡ bài viết vi phạm khỏi hệ thống!');
     }
   };

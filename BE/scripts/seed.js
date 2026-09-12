@@ -3,12 +3,11 @@ const path = require('path');
 const fs = require('fs');
 const dotenv = require('dotenv');
 
-// Ưu tiên nạp từ atlas-credentials.env
+dotenv.config({ path: path.join(__dirname, '../.env'), override: true });
 const atlasEnvPath = path.join(__dirname, '../atlas-credentials.env');
 if (fs.existsSync(atlasEnvPath)) {
   dotenv.config({ path: atlasEnvPath });
 }
-dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const User = require('../models/User');
 const MoodRecord = require('../models/MoodRecord');
@@ -16,18 +15,22 @@ const ForumPost = require('../models/ForumPost');
 const PartnerSync = require('../models/PartnerSync');
 const Moderation = require('../models/Moderation');
 const AiChat = require('../models/AiChat');
+const Medication = require('../models/Medication');
+const Appointment = require('../models/Appointment');
+const Transaction = require('../models/Transaction');
+const ZenContent = require('../models/ZenContent');
 
 async function seed() {
   const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/mamacare';
   const maskedUri = uri.replace(/:[^:@]+@/, ':****@');
-  console.log(`📡 Đang kết nối tới MongoDB Atlas để reset & nạp dữ liệu: ${maskedUri}...`);
+  console.log(`📡 Đang kết nối tới MongoDB để reset & nạp dữ liệu: ${maskedUri}...`);
 
   try {
     await mongoose.connect(uri, {
       dbName: 'mamacare',
       serverSelectionTimeoutMS: 10000
     });
-    console.log('🍃 Đã kết nối MongoDB Atlas (mamacare) thành công!');
+    console.log('🍃 Đã kết nối MongoDB thành công!');
 
     // Xóa dữ liệu cũ
     await Promise.all([
@@ -36,7 +39,11 @@ async function seed() {
       ForumPost.deleteMany({}),
       PartnerSync.deleteMany({}),
       Moderation.deleteMany({}),
-      AiChat.deleteMany({})
+      AiChat.deleteMany({}),
+      Medication.deleteMany({}),
+      Appointment.deleteMany({}),
+      Transaction.deleteMany({}),
+      ZenContent.deleteMany({})
     ]);
     console.log('🗑️  Đã làm sạch database cũ.');
 
@@ -44,8 +51,8 @@ async function seed() {
     const mom = await User.create({
       name: 'Nguyễn Thùy Trang',
       email: 'mebau@mamacare.vn',
-      phone: '0988112233',
-      password: 'password123',
+      phone: '0388558698',
+      password: 'abc',
       role: 'mom',
       roleName: 'Mẹ Bầu',
       avatar: '🌸',
@@ -142,26 +149,108 @@ async function seed() {
         likes: 128,
         isExpertVerified: true,
         comments: []
+      },
+      {
+        author: 'Mẹ Mây Nhỏ #402',
+        authorRole: 'Mẹ Bầu Tuần 18',
+        avatar: '☁️',
+        room: 'rage',
+        title: 'Mẹ chồng cứ ép ăn cháo móng giò mỗi ngày phát ngấy...',
+        content: 'Bác sĩ đã dặn chỉ cần bổ sung đủ chất, tăng cân khoa học. Nhưng ngày nào mẹ chồng cũng nấu nguyên nồi cháo to bắt ăn hết...',
+        tag: 'Trút Giận',
+        likes: 42,
+        isExpertVerified: false,
+        comments: []
+      },
+      {
+        author: 'Mẹ Hạt Dẻ #718',
+        authorRole: 'Mẹ Bầu Tuần 28',
+        avatar: '🌰',
+        room: 'advice',
+        title: 'Tuần 28 rồi mà đêm nào cũng trằn trọc đến 3h sáng, có mẹ nào có mẹo không?',
+        content: 'Em kê gối chữ U, uống sữa ấm trước khi ngủ mà vẫn không đỡ. Có mẹ nào có bí quyết nào dễ ngủ không chỉ em với ạ!',
+        tag: 'Xin Lời Khuyên',
+        likes: 27,
+        isExpertVerified: false,
+        comments: []
+      },
+      {
+        author: 'Mẹ Bắp Non #911',
+        authorRole: 'Mẹ Bầu Tuần 22',
+        avatar: '🌽',
+        room: 'joy',
+        title: 'Lần đầu tiên bố đặt tay lên bụng và bé đạp phản hồi đúng chỗ đó!',
+        content: 'Khoảnh khắc kỳ diệu nhất từ lúc mang thai đến giờ các mẹ ơi! Chồng mình bình thường ít nói thế mà lúc cảm nhận được con đã rơm rớm nước mắt...',
+        tag: 'Hạnh Phúc',
+        likes: 98,
+        isExpertVerified: false,
+        comments: []
       }
     ]);
 
     // 5. Tạo Moderations
     await Moderation.create([
       {
-        author: 'User#8821',
+        author: 'Ẩn danh #9182',
         type: 'post',
-        content: 'Có ai uống thuốc giảm cân thảo dược trong lúc mang thai không cho mình xin review với?',
-        reason: 'Nghi vấn quảng cáo dược phẩm / thuốc không rõ nguồn gốc cho phụ nữ mang thai',
+        content: 'Bán thuốc bổ xách tay cam kết sinh con trai 100%. Nhắn tin Zalo 09xxxx để mua thuốc thảo dược gia truyền...',
+        reason: 'Quảng cáo sai sự thật / Buôn bán trái phép',
         status: 'pending'
       },
       {
-        author: 'User#3012',
+        author: 'Ẩn danh #4412',
         type: 'chat',
-        content: 'Tôi cảm thấy vô cùng tuyệt vọng và không muốn tiếp tục nữa...',
-        reason: 'Cảnh báo đỏ (Red-flag): Từ khóa nguy hiểm về sức khỏe tinh thần',
-        status: 'pending'
+        content: 'Em mệt quá, em ghét cái thai này, em chỉ muốn biến mất... Mọi người ai cũng vô tâm...',
+        reason: 'Cảnh báo Đỏ: Nguy cơ trầm cảm thai kỳ nặng',
+        status: 'urgent_sos'
       }
     ]);
+
+    // 6. Tạo Medications
+    await Medication.create([
+      { userId: 'system', name: 'Sắt hữu cơ Fumafer (1 viên sau ăn sáng)', time: '08:00 AM', taken: true },
+      { userId: 'system', name: 'Canxi Nano BioCal (1 viên sau ăn trưa)', time: '13:00 PM', taken: true },
+      { userId: 'system', name: 'DHA Thai kỳ BioIsland (2 viên sau ăn tối)', time: '19:30 PM', taken: false },
+      { userId: 'system', name: 'Acid Folic 400mcg (1 viên trước khi ngủ)', time: '21:30 PM', taken: false }
+    ]);
+
+    // 7. Tạo Appointments
+    await Appointment.create([
+      { userId: 'system', title: 'Siêu âm hình thái 4D (Mốc Tuần 22)', date: '14/09/2026', doctor: 'BS. Nguyễn Mai Phương' },
+      { userId: 'system', title: 'Nghiệm pháp dung nạp Glucose (Tuần 26)', date: '05/10/2026', doctor: 'BS. Lê Hoàng Nam' }
+    ]);
+
+    // 8. Tạo Transactions
+    await Transaction.create([
+      { txId: 'TX-9901', user: 'Mẹ Hoàng Oanh', package: 'Gói MamaCare Premium 1 Năm', amount: 1200000, date: '10 phút trước', status: 'completed' },
+      { txId: 'TX-9902', user: 'Bố Minh Đức', package: 'Tư Vấn Tâm Lý Chuyên Sâu 1-1', amount: 500000, date: '45 phút trước', status: 'completed' },
+      { txId: 'TX-9903', user: 'Mẹ Ánh Tuyết', package: 'Gói MamaCare Premium 6 Tháng', amount: 690000, date: '2 giờ trước', status: 'completed' },
+      { txId: 'TX-9904', user: 'Bố Quốc Hưng', package: 'Khóa Học Daddy Masterclass', amount: 350000, date: '4 giờ trước', status: 'completed' }
+    ]);
+
+    // 9. Tạo ZenContent
+    await ZenContent.create({
+      tracks: [
+        { title: 'Sóng Não 432Hz Miracle Tone', desc: 'Tần số hòa bình, giảm căng thẳng thần kinh sâu', duration: 'Vòng lặp Synthesizer', type: 'binaural_432' },
+        { title: 'Sóng Não 528Hz DNA Repair', desc: 'Tần số phục hồi tế bào và nâng cao năng lượng tích cực', duration: 'Vòng lặp Synthesizer', type: 'binaural_528' },
+        { title: 'Tiếng Mưa Rào Pink Noise', desc: 'Tiếng mưa rơi dịu êm cắt đứt tạp âm, dễ đi vào giấc ngủ', duration: 'Vòng lặp Pink Noise', type: 'rain_noise' },
+        { title: 'Audio Truyện Thai Giáo: Hạt Mầm Yêu Thương', desc: 'Giọng đọc ấm áp giúp bé kết nối cùng mẹ trước giờ ngủ', duration: '12:45', type: 'story' }
+      ],
+      breathingGuide: {
+        name: 'Kỹ thuật thở 4-7-8',
+        purpose: 'Ngắt cơn hoảng loạn (Panic Attack) & Điều hòa nhịp tim trong 60 giây',
+        steps: [
+          { label: 'Hít vào bằng mũi sâu', duration: 4 },
+          { label: 'Giữ hơi tĩnh lặng', duration: 7 },
+          { label: 'Thở ra từ từ bằng miệng', duration: 8 }
+        ]
+      },
+      yogaExercises: [
+        { trimester: 1, title: 'Thư giãn cột sống & Chống ốm nghén nhẹ', duration: '12 phút', level: 'Dễ' },
+        { trimester: 2, title: 'Mở rộng khung chậu & Giảm áp lực thắt lưng', duration: '18 phút', level: 'Trung bình' },
+        { trimester: 3, title: 'Tập thở chuẩn bị chuyển dạ & Tư thế cánh bướm', duration: '15 phút', level: 'Nhẹ nhàng' }
+      ]
+    });
 
     console.log('✅ Hoàn tất nạp dữ liệu chuẩn y khoa vào MongoDB!');
     process.exit(0);

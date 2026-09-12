@@ -4,6 +4,7 @@ import MomView from './views/MomView';
 import HusbandView from './views/HusbandView';
 import AdminView from './views/AdminView';
 import AuthView from './views/AuthView';
+import ProfileView from './views/ProfileView';
 import SosModal from './components/SosModal';
 import QrModal from './components/QrModal';
 import BootcampModal from './components/BootcampModal';
@@ -70,6 +71,7 @@ export default function App() {
         currentRole={currentRole}
         setCurrentRole={setCurrentRole}
         onTriggerBell={triggerSimulatedAlert}
+        onOpenProfile={() => setCurrentRole('profile')}
       />
 
       {/* Main Content:
@@ -89,6 +91,8 @@ export default function App() {
             {/* Phân hệ Bố Bỉm (Partner) */}
             {currentRole === 'husband' && (
               <HusbandView
+                currentUser={currentUser}
+                onUpdateUser={(updated) => setCurrentUser(updated)}
                 onOpenQr={() => setIsQrOpen(true)}
                 onOpenBootcamp={(topic) => setBootcampModal({ isOpen: true, topic })}
               />
@@ -97,6 +101,15 @@ export default function App() {
             {/* Phân hệ Quản Trị Hệ Thống */}
             {currentRole === 'admin' && (
               <AdminView />
+            )}
+
+            {/* Trang Hồ Sơ Cá Nhân & Ghép Đôi */}
+            {currentRole === 'profile' && (
+              <ProfileView
+                currentUser={currentUser}
+                onUpdateUser={(updated) => setCurrentUser(updated)}
+                onBack={() => setCurrentRole(currentUser.role || 'mom')}
+              />
             )}
           </>
         )}

@@ -3,13 +3,12 @@ const path = require('path');
 const fs = require('fs');
 const dotenv = require('dotenv');
 
-// Ưu tiên nạp credentials từ file atlas-credentials.env nếu tồn tại
+// Nạp thông tin cấu hình từ atlas-credentials.env và .env
 const atlasEnvPath = path.join(__dirname, '../atlas-credentials.env');
 if (fs.existsSync(atlasEnvPath)) {
-  dotenv.config({ path: atlasEnvPath });
+  dotenv.config({ path: atlasEnvPath, override: true });
 }
-// Nạp thêm từ .env thông thường
-dotenv.config({ path: path.join(__dirname, '../.env') });
+dotenv.config({ path: path.join(__dirname, '../.env'), override: true });
 
 async function seedInitialData() {
   try {
@@ -18,6 +17,7 @@ async function seedInitialData() {
     const ForumPost = require('../models/ForumPost');
     const PartnerSync = require('../models/PartnerSync');
     const Moderation = require('../models/Moderation');
+    const ZenContent = require('../models/ZenContent');
 
     const userCount = await User.countDocuments();
     if (userCount === 0) {
@@ -27,8 +27,8 @@ async function seedInitialData() {
       const mom = await User.create({
         name: 'Nguyễn Thùy Trang',
         email: 'mebau@mamacare.vn',
-        phone: '0388558698',
-        password: 'abc',
+        phone: '0988112233',
+        password: 'password123',
         role: 'mom',
         roleName: 'Mẹ Bầu',
         avatar: '🌸',
@@ -45,12 +45,13 @@ async function seedInitialData() {
         role: 'husband',
         roleName: 'Bố Bỉm (Partner)',
         avatar: '🧸',
+        pregnancyWeek: 12,
         partnerCode: 'MAMA-8899',
         partnerName: 'Nguyễn Thùy Trang'
       });
 
       await User.create({
-        name: 'Quản Trị Hệ Thống',
+        name: 'Ban Quản Trị MamaCare',
         email: 'admin@mamacare.vn',
         phone: '0911000999',
         password: 'adminpassword123',
@@ -61,13 +62,12 @@ async function seedInitialData() {
 
       // Seed Mood Records
       await MoodRecord.create([
-        { user: mom._id, userName: mom.name, date: '2026-09-03', dayOfWeek: 'T5', time: '09:00', mood: 'Hạnh phúc', emoji: '🥰', score: 90, symptoms: ['Khỏe khoắn', 'Tràn đầy năng lượng'], waterCount: 8, journal: 'Hôm nay bé đạp rất ngoan, mẹ cảm thấy thật bình yên.' },
-        { user: mom._id, userName: mom.name, date: '2026-09-04', dayOfWeek: 'T6', time: '14:30', mood: 'Thư thái', emoji: '🌿', score: 85, symptoms: ['Hơi khát nước'], waterCount: 7, journal: 'Đi dạo buổi chiều ở công viên cùng chồng.' },
-        { user: mom._id, userName: mom.name, date: '2026-09-05', dayOfWeek: 'T7', time: '20:15', mood: 'Bình an', emoji: '🌸', score: 80, symptoms: ['Mỏi chân nhẹ'], waterCount: 6, journal: 'Nghe nhạc sóng não thiền trước khi ngủ.' },
-        { user: mom._id, userName: mom.name, date: '2026-09-06', dayOfWeek: 'CN', time: '11:00', mood: 'Nhạy cảm', emoji: '🥺', score: 65, symptoms: ['Mỏi thắt lưng', 'Buồn ngủ'], waterCount: 5, journal: 'Thời tiết mưa âm u khiến mẹ hơi tủi thân một chút.' },
-        { user: mom._id, userName: mom.name, date: '2026-09-07', dayOfWeek: 'T2', time: '08:45', mood: 'Căng thẳng', emoji: '🌩️', score: 55, symptoms: ['Khó ngủ', 'Mỏi lưng'], waterCount: 6, journal: 'Công việc đầu tuần hơi dồn dập, phải hít thở sâu.' },
-        { user: mom._id, userName: mom.name, date: '2026-09-08', dayOfWeek: 'T3', time: '15:20', mood: 'Hồi phục', emoji: '🌤️', score: 75, symptoms: ['Đã khỏe hơn'], waterCount: 7, journal: 'Chồng pha cho cốc nước ấm ngâm chân, thấy dễ chịu hẳn.' },
-        { user: mom._id, userName: mom.name, date: '2026-09-09', dayOfWeek: 'T4', time: '10:00', mood: 'Yêu đời', emoji: '🥰', score: 88, symptoms: ['Khỏe khoắn'], waterCount: 7, journal: 'Bé con tuần 24 đã bắt đầu phản ứng với giọng nói của ba!' }
+        { user: mom._id, userName: mom.name, date: '2026-09-04', dayOfWeek: 'T6', time: '14:30', mood: 'Thư thái', emoji: '🌿', score: 85, symptoms: ['Hơi khát nước'], waterCount: 1750, weight: 58.5, temperature: 36.6, journal: 'Đi dạo buổi chiều ở công viên cùng chồng.' },
+        { user: mom._id, userName: mom.name, date: '2026-09-05', dayOfWeek: 'T7', time: '20:15', mood: 'Bình an', emoji: '🌸', score: 80, symptoms: ['Mỏi chân nhẹ'], waterCount: 1500, weight: 58.6, temperature: 36.5, journal: 'Nghe nhạc sóng não thiền trước khi ngủ.' },
+        { user: mom._id, userName: mom.name, date: '2026-09-06', dayOfWeek: 'CN', time: '11:00', mood: 'Nhạy cảm', emoji: '🥺', score: 65, symptoms: ['Mỏi thắt lưng', 'Buồn ngủ'], waterCount: 1250, weight: 58.7, temperature: 36.8, journal: 'Thời tiết mưa âm u khiến mẹ hơi tủi thân một chút.' },
+        { user: mom._id, userName: mom.name, date: '2026-09-07', dayOfWeek: 'T2', time: '08:45', mood: 'Căng thẳng', emoji: '🌩️', score: 55, symptoms: ['Khó ngủ', 'Mỏi lưng'], waterCount: 1500, weight: 58.8, temperature: 36.7, journal: 'Công việc đầu tuần hơi dồn dập, phải hít thở sâu.' },
+        { user: mom._id, userName: mom.name, date: '2026-09-08', dayOfWeek: 'T3', time: '15:20', mood: 'Hồi phục', emoji: '🌤️', score: 75, symptoms: ['Đã khỏe hơn'], waterCount: 1750, weight: 59.0, temperature: 36.5, journal: 'Chồng pha cho cốc nước ấm ngâm chân, thấy dễ chịu hẳn.' },
+        { user: mom._id, userName: mom.name, date: '2026-09-09', dayOfWeek: 'T4', time: '10:00', mood: 'Yêu đời', emoji: '🥰', score: 88, symptoms: ['Khỏe khoắn'], waterCount: 1750, weight: 59.2, temperature: 36.6, journal: 'Bé con tuần 24 đã bắt đầu phản ứng với giọng nói của ba!' }
       ]);
 
       // Seed Partner Sync
@@ -166,18 +166,19 @@ async function connectDB() {
   if (cachedPromise) {
     return cachedPromise;
   }
+
   const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/mamacare';
   const isAtlas = uri.includes('mongodb.net') || uri.startsWith('mongodb+srv');
-  
+
   cachedPromise = (async () => {
     try {
       const maskedUri = uri.replace(/:[^:@]+@/, ':****@');
       console.log(`📡 Đang kết nối tới MongoDB ${isAtlas ? 'Atlas Cloud' : 'Local'}: ${maskedUri}...`);
-      
+
       await mongoose.connect(uri, {
         dbName: 'mamacare',
-        serverSelectionTimeoutMS: 3000,
-        connectTimeoutMS: 5000
+        serverSelectionTimeoutMS: 10000,
+        connectTimeoutMS: 10000
       });
       isDbConnected = true;
       console.log(`🍃 Kết nối MongoDB Atlas Cloud thành công (database: mamacare)!`);
@@ -190,15 +191,13 @@ async function connectDB() {
       console.warn(`⚠️ Không thể kết nối tới MongoDB tại ${uri}: ${err.message}`);
       cachedPromise = null;
 
-      // Không chạy MongoMemoryServer trên môi trường Production/Vercel
       if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
         throw err;
       }
 
       console.log('🔄 Đang khởi tạo MongoDB Server cục bộ dự phòng (MongoMemoryServer)...');
       try {
-        const msPkg = 'mongodb-memory-server';
-        const { MongoMemoryServer } = require(msPkg);
+        const { MongoMemoryServer } = require('mongodb-memory-server');
         const mongod = await MongoMemoryServer.create({
           instance: {
             dbName: 'mamacare'
@@ -206,7 +205,7 @@ async function connectDB() {
         });
         const memoryUri = mongod.getUri();
         console.log(`🌱 Đã kích hoạt Embedded MongoDB Instance: ${memoryUri}`);
-        
+
         await mongoose.connect(memoryUri, { dbName: 'mamacare' });
         isDbConnected = true;
         console.log('🍃 Kết nối MongoDB Engine thành công!');

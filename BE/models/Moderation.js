@@ -7,7 +7,7 @@ const ModerationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['post', 'chat', 'comment'],
+    enum: ['post', 'chat', 'comment', 'reported_post', 'sos_chat'],
     default: 'post'
   },
   content: {
@@ -24,7 +24,7 @@ const ModerationSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected'],
+    enum: ['pending', 'approved', 'rejected', 'urgent_sos'],
     default: 'pending'
   }
 });
