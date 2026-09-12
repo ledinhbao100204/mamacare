@@ -13,6 +13,15 @@ if (fs.existsSync(atlasEnv)) {
 dotenv.config({ path: path.join(__dirname, '../BE/.env') });
 
 // MONGODB_URI được lấy trực tiếp từ Environment Variables của Vercel hoặc file .env
+if (!process.env.DEEPSEEK_MODEL) {
+  process.env.DEEPSEEK_MODEL = 'deepseek-chat';
+}
+if (!process.env.DEEPSEEK_API_URL) {
+  process.env.DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions';
+}
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = 'mamacare_secret_key_2026';
+}
 
 const { connectDB } = require('../BE/config/db');
 const apiRoutes = require('../BE/routes/api');

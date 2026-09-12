@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MamaApi } from '../services/api';
 import './HusbandView.css';
 
@@ -16,6 +16,23 @@ export default function HusbandView({ currentUser, onUpdateUser, onOpenQr, onOpe
 
   const [actionsTaken, setActionsTaken] = useState([]);
   const [customMessage, setCustomMessage] = useState('');
+
+  // States AI Chatbot Quân Sư Bố Bỉm (DeepSeek)
+  const [isAiChatOpen, setIsAiChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState([
+    {
+      id: 1,
+      sender: 'ai',
+      text: 'Chào người bố tuyệt vời! 🧸✨ Mình là MamaAI - Quân sư đồng hành cùng bố trong thai kỳ. Bố có thắc mắc gì về tâm lý vợ bầu, kỹ thuật massage hay chuẩn bị giỏ đồ đi sinh không? Mình sẵn sàng hỗ trợ bố 24/7!'
+    }
+  ]);
+  const [aiInput, setAiInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const chatMessagesEndRef = useRef(null);
+
+  useEffect(() => {
+    chatMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages, isTyping]);
 
   const userId = currentUser?._id || currentUser?.id || currentUser?.email || 'husband_default';
 
@@ -37,15 +54,58 @@ export default function HusbandView({ currentUser, onUpdateUser, onOpenQr, onOpe
     fetchSync();
   }, [currentUser]);
 
-  // Hành động chăm sóc vợ
+  // Hành động chăm sóc vợ (Hỗ trợ tích hoàn thành & hủy tích khi lỡ ấn)
   const handleAction = async (actionId, label) => {
+    if (actionsTaken.includes(actionId)) {
+      setActionsTaken(prev => prev.filter(id => id !== actionId));
+      setNoticeModal({
+        title: 'Đã Hủy Đánh Dấu Hành Động ↩️',
+        message: `Bạn đã bỏ tích hành động "${label}". Bạn có thể tích lại bất cứ khi nào thực hiện!`,
+        type: 'info'
+      });
+      return;
+    }
+
     setActionsTaken(prev => [...prev, actionId]);
     await MamaApi.sendPartnerAction(actionId, label);
     setNoticeModal({
       title: 'Đã Gửi Yêu Thương Đến Mẹ Bầu! 💖',
-      message: `Hành động: "${label}" đã được gửi tới màn hình của vợ. Vợ chắc chắn sẽ cảm nhận được sự ấm áp từ bạn!`,
+      message: `Hành động: "${label}" đã được ghi nhận và gửi tới màn hình của vợ! (Nếu lỡ bấm nhầm, bạn có thể bấm lại nút này để hủy tích).`,
       type: 'success'
     });
+  };
+
+  // Gửi tin nhắn chat với MamaAI Quân Sư (DeepSeek)
+  const handleSendChat = async (textToSend) => {
+    const msg = textToSend || aiInput;
+    if (!msg.trim()) return;
+
+    const userMsgObj = { id: Date.now(), sender: 'user', text: msg };
+    const updatedHistory = [...chatMessages, userMsgObj];
+    setChatMessages(updatedHistory);
+    setAiInput('');
+    setIsTyping(true);
+
+    let aiReply = "Bố hãy thật kiên nhẫn và luôn ôm ấp, đồng cảm cùng vợ nhé! Mang thai là một thử thách rất lớn về thể xác lẫn tinh thần. Sự chu đáo và bình tĩnh của bố chính là liều thuốc an thần tốt nhất cho mẹ bầu! ❤️🧸";
+    let providerInfo = 'DeepSeek AI';
+
+    try {
+      const apiRes = await MamaApi.sendAiChat(msg, updatedHistory);
+      if (apiRes && apiRes.reply) {
+        aiReply = apiRes.reply;
+        if (apiRes.provider) providerInfo = apiRes.provider;
+      }
+    } catch (err) {
+      console.warn('AI chat error:', err);
+    }
+
+    setTimeout(() => {
+      setIsTyping(false);
+      setChatMessages(prev => [
+        ...prev,
+        { id: Date.now() + 1, sender: 'ai', text: aiReply, provider: providerInfo }
+      ]);
+    }, 600);
   };
 
   // Bố nhập mã để kết nối ghép đôi lại
@@ -309,36 +369,72 @@ export default function HusbandView({ currentUser, onUpdateUser, onOpenQr, onOpe
                 </div>
               </div>
 
-              {/* 4 Thao Tác Cụ Thể */}
+              {/* 4 Thao Tác Cụ Thể (Hỗ trợ tích hoàn thành & hủy tích linh hoạt) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {[
                   { id: 'dish', tag: 'Việc nhà', title: 'Chủ động rửa bát & dọn bếp 🧼', desc: 'Giúp vợ không phải đứng lâu gây dồn trọng lượng lên thắt lưng và bắp chân.', label: 'Rửa bát tối nay', col: 'rose' },
                   { id: 'massage', tag: 'Thư giãn', title: 'Massage thắt lưng 15 phút 💆‍♂️', desc: 'Xoa tròn nhẹ nhàng vùng L4-L5 cùng dầu dừa hoặc tinh dầu tràm ấm.', label: 'Massage thắt lưng', col: 'amber' },
                   { id: 'treat', tag: 'Dinh dưỡng', title: 'Mua món bánh/trà sữa vợ thích 🧋', desc: 'Một chút đồ ăn ngon kèm lời nhắn ngọt ngào sẽ làm dịu tâm trạng ngay.', label: 'Mua món vợ thích', col: 'sky' },
                   { id: 'walk', tag: 'Gắn kết', title: 'Rủ vợ đi dạo hóng gió mát 🍃', desc: '15 phút đi bộ cùng chồng hít thở không khí trong lành giúp giải tỏa bức bối.', label: 'Rủ đi dạo công viên', col: 'emerald' }
-                ].map(action => (
-                  <div key={action.id} className="rescue-tip-card p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-start justify-between space-x-3">
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-black uppercase text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full font-cute">
-                        {action.tag}
-                      </span>
-                      <h5 className="text-xs font-black font-cute text-slate-800">{action.title}</h5>
-                      <p className="text-[11px] text-slate-500 font-semibold leading-relaxed">{action.desc}</p>
-                    </div>
-                    <button
-                      type="button"
-                      disabled={actionsTaken.includes(action.id)}
-                      onClick={() => handleAction(action.id, action.label)}
-                      className={`px-3.5 py-2 rounded-xl text-xs font-black font-cute shrink-0 transition cursor-pointer ${
-                        actionsTaken.includes(action.id)
-                          ? 'bg-slate-300 text-white cursor-not-allowed'
-                          : 'bg-rose-500 hover:bg-rose-600 text-white shadow-sm bounce-click'
+                ].map(action => {
+                  const isDone = actionsTaken.includes(action.id);
+                  return (
+                    <div
+                      key={action.id}
+                      className={`rescue-tip-card p-4 rounded-2xl border transition flex items-start justify-between space-x-3 ${
+                        isDone
+                          ? 'bg-emerald-50/80 border-emerald-300 shadow-xs'
+                          : 'bg-slate-50 border-slate-200 hover:border-blue-200'
                       }`}
                     >
-                      {actionsTaken.includes(action.id) ? 'Đã Làm ❤️' : 'Đã Làm'}
-                    </button>
-                  </div>
-                ))}
+                      <div className="space-y-1 flex-grow">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full font-cute ${
+                            isDone ? 'bg-emerald-200 text-emerald-900' : 'bg-rose-100 text-rose-700'
+                          }`}>
+                            {action.tag}
+                          </span>
+                          {isDone && (
+                            <span className="text-[10px] font-bold text-emerald-700 font-cute flex items-center gap-1">
+                              <i className="fa-solid fa-check"></i> Đã làm
+                            </span>
+                          )}
+                        </div>
+                        <h5 className={`text-xs font-black font-cute ${isDone ? 'text-emerald-950' : 'text-slate-800'}`}>
+                          {action.title}
+                        </h5>
+                        <p className="text-[11px] text-slate-500 font-semibold leading-relaxed">
+                          {action.desc}
+                        </p>
+                      </div>
+
+                      <div className="shrink-0 flex flex-col items-end gap-1">
+                        {isDone ? (
+                          <button
+                            type="button"
+                            onClick={() => handleAction(action.id, action.label)}
+                            className="px-3 py-1.5 rounded-xl text-[11px] font-black font-cute transition cursor-pointer bg-emerald-600 hover:bg-rose-500 text-white shadow-xs group flex items-center gap-1.5"
+                            title="Bấm để hủy tích hoặc làm lại nếu ấn nhầm"
+                          >
+                            <i className="fa-solid fa-check-circle group-hover:hidden"></i>
+                            <i className="fa-solid fa-rotate-left hidden group-hover:inline"></i>
+                            <span className="group-hover:hidden">Đã Xong</span>
+                            <span className="hidden group-hover:inline">Hủy Tích</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleAction(action.id, action.label)}
+                            className="px-3.5 py-2 rounded-xl text-xs font-black font-cute shrink-0 transition cursor-pointer bg-rose-500 hover:bg-rose-600 text-white shadow-sm bounce-click flex items-center gap-1"
+                          >
+                            <span>Đã Làm</span>
+                            <i className="fa-solid fa-arrow-right text-[10px]"></i>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -353,7 +449,9 @@ export default function HusbandView({ currentUser, onUpdateUser, onOpenQr, onOpe
               <span>Lớp Học Làm Ba (Daddy Bootcamp)</span>
               <span>🎓</span>
             </h3>
-            <p className="text-xs text-amber-700 font-semibold">Các bài học Micro-learning dưới 1 phút giải thích khoa học biến động hormone và kỹ năng chăm sóc</p>
+            <p className="text-xs text-amber-700 font-semibold">
+              Các bài học Micro-learning gắn kèm video minh họa & bài báo y khoa chính thống giúp bố thấu hiểu tâm sinh lý và kỹ năng chăm sóc
+            </p>
           </div>
           <span className="text-xs font-black font-cute px-3 py-1 bg-amber-100 text-amber-800 rounded-full border border-amber-300 w-fit">
             ⭐ Huy hiệu Bố Bỉm 10 Điểm
@@ -362,27 +460,47 @@ export default function HusbandView({ currentUser, onUpdateUser, onOpenQr, onOpe
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { topic: 'hormone', icon: '🧬', time: '45 giây đọc', title: 'Giải Mã Hormone Estrogen & Progesterone', desc: 'Hiểu vì sao lượng hormone tăng gấp 30 lần khiến vợ siêu nhạy cảm và dễ khóc.', color: 'rose' },
-            { topic: 'massage', icon: '💆‍♂️', time: '55 giây video', title: 'Kỹ Thuật Massage Thắt Lưng Cho Vợ', desc: '3 động tác xoa bóp chuẩn y khoa giúp giảm đau nhức mỏi lưng đến 80%.', color: 'amber' },
-            { topic: 'speech', icon: '💬', time: '40 giây đọc', title: 'Từ Điển Giao Tiếp: Tránh Câu Nói Cấm Kỵ', desc: 'Những câu nói tuyệt đối không được nói và cách an ủi để vợ luôn an tâm.', color: 'blue' },
-            { topic: 'hospital_bag', icon: '🎒', time: '50 giây đọc', title: 'Checklist Giỏ Đồ Đi Sinh Cho Bố', desc: 'Hồ sơ khám thai, đồ sơ sinh, bỉm mẹ và những vật dụng thiết yếu lúc chuyển dạ.', color: 'emerald' }
+            { topic: 'hormone', icon: '🧬', time: '45 giây', title: 'Giải Mã Hormone Estrogen & Progesterone', desc: 'Hiểu vì sao lượng hormone tăng gấp 30 lần khiến vợ siêu nhạy cảm và dễ khóc.', color: 'rose' },
+            { topic: 'massage', icon: '💆‍♂️', time: '55 giây', title: 'Kỹ Thuật Massage Thắt Lưng Cho Vợ', desc: '3 động tác xoa bóp chuẩn y khoa giúp giảm đau nhức mỏi lưng đến 80%.', color: 'amber' },
+            { topic: 'speech', icon: '💬', time: '40 giây', title: 'Từ Điển Giao Tiếp: Tránh Câu Nói Cấm Kỵ', desc: 'Những câu nói tuyệt đối không được nói và cách an ủi để vợ luôn an tâm.', color: 'blue' },
+            { topic: 'hospital_bag', icon: '🎒', time: '50 giây', title: 'Checklist Giỏ Đồ Đi Sinh Cho Bố', desc: 'Hồ sơ khám thai, đồ sơ sinh, bỉm mẹ và những vật dụng thiết yếu lúc chuyển dạ.', color: 'emerald' }
           ].map(b => (
             <div
               key={b.topic}
               onClick={() => onOpenBootcamp(b.topic)}
-              className="bootcamp-card p-5 bg-gradient-to-tr from-amber-50/50 to-orange-50/30 border-2 border-amber-200 rounded-2xl space-y-3 cursor-pointer hover:shadow-md transition"
+              className="bootcamp-card p-5 bg-gradient-to-tr from-amber-50/60 to-orange-50/40 border-2 border-amber-200 hover:border-amber-400 rounded-2xl space-y-3 cursor-pointer hover:shadow-md transition group flex flex-col justify-between"
             >
-              <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-lg shadow-sm">
-                {b.icon}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-lg shadow-sm group-hover:scale-105 transition">
+                    {b.icon}
+                  </div>
+                  <span className="text-[10px] font-black uppercase text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full font-cute">
+                    {b.time}
+                  </span>
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-black font-cute text-slate-800 mt-0.5 group-hover:text-amber-700 transition">
+                    {b.title}
+                  </h4>
+                </div>
+                <p className="text-[11px] text-slate-500 font-semibold leading-relaxed line-clamp-2">
+                  {b.desc}
+                </p>
               </div>
-              <div>
-                <span className="text-[10px] font-black uppercase text-amber-600 font-cute">{b.time}</span>
-                <h4 className="text-xs sm:text-sm font-black font-cute text-slate-800 mt-0.5">{b.title}</h4>
+
+              {/* Badges gắn kèm video & tin tức bài báo */}
+              <div className="pt-2.5 border-t border-amber-100 flex flex-wrap items-center gap-1.5 text-[10px] font-bold text-amber-800">
+                <span className="px-2 py-0.5 bg-white rounded-md border border-amber-200 shadow-xs flex items-center gap-1">
+                  <i className="fa-solid fa-circle-play text-red-500"></i> Video
+                </span>
+                <span className="px-2 py-0.5 bg-white rounded-md border border-amber-200 shadow-xs flex items-center gap-1">
+                  <i className="fa-solid fa-newspaper text-blue-500"></i> 2 Bài báo
+                </span>
+                <span className="ml-auto text-amber-600 font-cute flex items-center gap-0.5">
+                  Xem <i className="fa-solid fa-arrow-right text-[9px]"></i>
+                </span>
               </div>
-              <p className="text-[11px] text-slate-500 font-semibold leading-relaxed">{b.desc}</p>
-              <span className="text-xs font-black font-cute text-amber-600 flex items-center gap-1">
-                Xem bài giảng <i className="fa-solid fa-arrow-right text-[10px]"></i>
-              </span>
             </div>
           ))}
         </div>
@@ -456,6 +574,175 @@ export default function HusbandView({ currentUser, onUpdateUser, onOpenQr, onOpe
               Đã Hiểu
             </button>
           </div>
+        </div>
+      )}
+      {/* =========================================================================
+          MODULE 2.3: CHATBOT AI QUÂN SƯ BỐ BỈM (GÓC PHẢI MÀN HÌNH - DEEPSEEK)
+          ========================================================================= */}
+      {/* Nút icon tròn nổi ở góc dưới bên phải */}
+      <div className="fixed bottom-6 right-4 sm:right-6 z-40">
+        <button
+          type="button"
+          onClick={() => setIsAiChatOpen(!isAiChatOpen)}
+          className="w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-2xl bg-white border-4 border-blue-200 p-0.5 flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 relative group cursor-pointer"
+          title="Tư vấn tâm lý & cẩm nang chăm vợ với MamaAI Quân Sư"
+        >
+          {isAiChatOpen ? (
+            <div className="w-full h-full rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-xl font-bold">
+              ✕
+            </div>
+          ) : (
+            <div className="w-full h-full rounded-full overflow-hidden relative flex items-center justify-center bg-blue-50">
+              <img
+                src="/assets/mama_ai_mascot.jpg"
+                alt="MamaAI"
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+              />
+              {/* Online dot */}
+              <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+            </div>
+          )}
+
+          {/* Badge nổi */}
+          {!isAiChatOpen && (
+            <span className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-blue-600 text-[10px] text-white font-black rounded-full shadow border border-white font-cute">
+              AI
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Cửa sổ Popup Chat MamaAI Quân Sư */}
+      {isAiChatOpen && (
+        <div
+          id="mama-ai-husband-chat-popup"
+          className="fixed bottom-24 right-4 sm:right-6 z-50 w-[92vw] sm:w-[410px] h-[560px] max-h-[82vh] bg-white rounded-[28px] shadow-2xl border-4 border-blue-200 flex flex-col overflow-hidden animate-fade-in"
+          style={{
+            boxShadow: '0 25px 60px -15px rgba(37, 99, 235, 0.35), 0 10px 25px -5px rgba(0,0,0,0.1)'
+          }}
+        >
+          {/* Header Popup */}
+          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-3.5 sm:p-4 text-white flex items-center justify-between shadow-sm">
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <img
+                  src="/assets/mama_ai_mascot.jpg"
+                  alt="MamaAI Quân Sư"
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl object-cover border-2 border-white/90 shadow ring-2 ring-white/40"
+                />
+                <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-400 border-2 border-white rounded-full"></span>
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <h3 className="text-sm sm:text-base font-black font-cute text-white leading-tight">
+                    MamaAI Quân Sư Bố Bỉm
+                  </h3>
+                  <span className="text-[10px] font-black px-2 py-0.5 bg-white/20 text-white rounded-full border border-white/30 backdrop-blur-sm">
+                    DeepSeek V3
+                  </span>
+                </div>
+                <p className="text-[11px] text-blue-100 font-medium leading-tight mt-0.5">
+                  Trợ lý tâm lý & kỹ năng chăm sóc vợ 24/7 🧸
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsAiChatOpen(false)}
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center text-xs sm:text-sm font-bold transition active:scale-90 cursor-pointer"
+              title="Đóng cửa sổ chat"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Body: Tin nhắn chat */}
+          <div className="flex-grow overflow-y-auto p-3.5 sm:p-4 space-y-3 bg-gradient-to-b from-blue-50/40 via-white to-blue-50/20 chat-scroll-area">
+            {chatMessages.map(msg => (
+              <div
+                key={msg.id}
+                className={`flex items-start ${msg.sender === 'user' ? 'justify-end' : 'space-x-2.5'}`}
+              >
+                {msg.sender === 'ai' && (
+                  <img
+                    src="/assets/mama_ai_mascot.jpg"
+                    alt="MamaAI"
+                    className="w-8 h-8 rounded-2xl object-cover border border-blue-200 shadow-sm shrink-0 mt-0.5"
+                  />
+                )}
+                <div
+                  className={`p-3 sm:p-3.5 text-xs sm:text-sm font-semibold max-w-[85%] leading-relaxed shadow-sm rounded-2xl ${
+                    msg.sender === 'user'
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-none'
+                      : 'bg-white text-slate-700 border border-blue-100 rounded-tl-none'
+                  }`}
+                >
+                  <div className="whitespace-pre-line">{msg.text}</div>
+                  {msg.sender === 'ai' && (
+                    <div className="text-[10px] text-slate-400 font-medium mt-1.5 pt-1 border-t border-slate-100 flex items-center justify-between gap-2">
+                      <span className="text-blue-600 font-bold">✨ {msg.provider || 'DeepSeek AI Quân Sư'}</span>
+                      <span className="text-[9px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.2 rounded">Chuẩn Y Khoa</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {isTyping && (
+              <div className="flex items-start space-x-2.5">
+                <img
+                  src="/assets/mama_ai_mascot.jpg"
+                  alt="MamaAI"
+                  className="w-8 h-8 rounded-2xl object-cover border border-blue-200 shadow-sm shrink-0"
+                />
+                <div className="bg-blue-50 rounded-[20px] rounded-tl-none p-3 text-xs text-blue-600 font-bold animate-pulse font-cute border border-blue-100 flex items-center gap-1.5">
+                  <span>MamaAI đang phân tích và tìm giải pháp cho bố...</span>
+                  <span className="text-base">✨</span>
+                </div>
+              </div>
+            )}
+            <div ref={chatMessagesEndRef} />
+          </div>
+
+          {/* Gợi ý câu hỏi nhanh dành riêng cho Bố */}
+          <div className="px-3 py-2 bg-blue-50/60 border-t border-blue-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+            {[
+              'Vợ cáu gắt vô cớ thì nên làm gì?',
+              'Kỹ thuật massage lưng L4-L5?',
+              'Checklist giỏ đồ đi sinh tuần 34?',
+              'Dinh dưỡng tam cá nguyệt 2 cần kiêng gì?'
+            ].map(p => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => handleSendChat(p)}
+                className="text-[11px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap transition shrink-0 bg-white hover:bg-blue-100 text-slate-700 border border-blue-200 cursor-pointer"
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+
+          {/* Form nhập & gửi tin nhắn */}
+          <form
+            onSubmit={(e) => { e.preventDefault(); handleSendChat(); }}
+            className="p-3 bg-white border-t border-blue-100 flex items-center gap-2"
+          >
+            <input
+              type="text"
+              value={aiInput}
+              onChange={(e) => setAiInput(e.target.value)}
+              placeholder="Hỏi MamaAI về cách chăm sóc vợ..."
+              className="flex-grow p-3 rounded-2xl border-2 border-blue-200 focus:border-blue-400 text-xs font-semibold text-slate-700 outline-none bg-blue-50/30 transition"
+            />
+            <button
+              type="submit"
+              className="w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-black flex items-center justify-center shadow-cute hover:scale-105 active:scale-95 transition shrink-0 cursor-pointer"
+              title="Gửi tin nhắn"
+            >
+              <i className="fa-solid fa-paper-plane text-xs"></i>
+            </button>
+          </form>
         </div>
       )}
     </section>
